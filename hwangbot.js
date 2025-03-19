@@ -88,7 +88,7 @@ telegramBot.on('message', async (msg) => {
 	}
 });
 
-telegramBot.onText('/\/status/', (msg) => {
+telegramBot.onText(/\/status/, (msg) => {
 	if (msg.chat.id != process.env.CHAT_ID_ADMIN) return;
 	
 	telegramBot.sendMessage(msg.chat.id, "healthy");
