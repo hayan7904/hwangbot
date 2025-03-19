@@ -53,7 +53,7 @@ const killBird = async function(msg) {
 			if (id != null) {
 				const data = await getYoutubeData(id, process.env.YOUTUBE_API_KEY);
 
-				if (data && data.title && data.description) {
+				if (data && (data.title || data.description)) {
 					const titleAndDescription = data.title + data.description;
 					answer = await callGptYoutube(titleAndDescription);
 				}
@@ -68,16 +68,16 @@ const killBird = async function(msg) {
 		const birdTime = getDate(msg.date);
 		console.log(`[${msg.chat.id}:${msg.message_id}] Bird detected... by ${msg.from.first_name} at ${birdTime.year}-${birdTime.month}-${birdTime.day} ${birdTime.hour}:${birdTime.minute}`);
 
-		for (let i = 0; i < 10; i++) {
-			telegramBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
-				reply_to_message_id: messageId
-			});
-			// telegramBot.sendMessage(
-			// 	chatId, 
-			// 	`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!</a>`,
-			// 	{ parse_mode: "HTML" }
-			// );
-			await sleep(500);
+		telegramBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
+			reply_to_message_id: messageId
+		});
+		for (let i = 0; i < 15; i++) {
+			telegramBot.sendMessage(
+				chatId, 
+				`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</a>`,
+				{ parse_mode: "HTML" }
+			);
+			await sleep(700);
 		}
 	}
 }
@@ -103,7 +103,7 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 	if (arg) {
 		const data = await getYoutubeData(arg, process.env.YOUTUBE_API_KEY);
 
-		if (data && data.title && data.description) {
+		if (data && (data.title || data.description)) {
 			const titleAndDescription = data.title + data.description;
 			const answer = await callGptYoutube(titleAndDescription);
 
@@ -121,8 +121,8 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 
 telegramBot.setMyCommands(
 	[
-		{ command: "/status", description: "" },
-		{ command: "/test", description: "" },
+		{ command: "/status", description: "get status" },
+		{ command: "/test", description: "test youtube id" },
 	], 
 	{ scope: { type: "chat", chat_id: 49819934} }
 );
