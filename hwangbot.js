@@ -1,5 +1,5 @@
-import { callGptYoutube, callGptVision } from './util/gptUtil';
-import { getYoutubeId, getYoutubeData } from './util/youtubeUtil';
+const { callGptYoutube, callGptVision } = require('./util/gptUtil');
+const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil');
 
 require('dotenv').config();
 const TelegramBotApi = require('node-telegram-bot-api');
