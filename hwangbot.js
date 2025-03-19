@@ -121,8 +121,8 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 
 telegramBot.setMyCommands(
 	[
-		{ command: "/status", description: "get status" },
-		{ command: "/test", description: "test youtube id" },
+		{ command: "/status", description: "bot status" },
+		{ command: "/test", description: "/test youtube_id" },
 	], 
 	{ scope: { type: "chat", chat_id: 49819934} }
 );
