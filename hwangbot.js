@@ -72,6 +72,11 @@ const killBird = async function(msg) {
 			telegramBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
 				reply_to_message_id: messageId
 			});
+			// telegramBot.sendMessage(
+			// 	chatId, 
+			// 	`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!</a>`,
+			// 	{ parse_mode: "HTML" }
+			// );
 			await sleep(500);
 		}
 	}
@@ -103,6 +108,11 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 			const answer = await callGptYoutube(titleAndDescription);
 
 			telegramBot.sendMessage(msg.chat.id, `Test Result: ${answer}`);
+			telegramBot.sendMessage(
+				chatId, 
+				`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!</a>`,
+				{ parse_mode: "HTML" }
+			);
 		}
 	} else {
 		telegramBot.sendMessage(msg.chat.id, `Wrong args`);
