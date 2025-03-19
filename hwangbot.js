@@ -53,11 +53,10 @@ const killBird = async function(msg) {
 			if (id != null) {
 				const data = await getYoutubeData(id, process.env.YOUTUBE_API_KEY);
 
-				//console.log('#### Youtube Data ####');
-				//console.log(data);
-
-				const titleAndDescription = data.title + data.description;
-				answer = await callGptYoutube(titleAndDescription);
+				if (data && data.title && data.description) {
+					const titleAndDescription = data.title + data.description;
+					answer = await callGptYoutube(titleAndDescription);
+				}
 			}
 		}
 	}
@@ -79,20 +78,40 @@ const killBird = async function(msg) {
 }
 
 telegramBot.on('message', async (msg) => {
-
-	console.log(msg.chat.id + " : " + msg.from.id + ', ' + msg.from.first_name + ', ' + msg.from.last_name + ', ' + msg.from.username);
-
 	if (msg.chat.id == process.env.CHAT_ID_COMMON) {
-		// if (msg.from.id == 52186264) killBird(msg);
-		killBird(msg);
+		if (msg.from.id == 52186264 || msg.from.id == 56796388) killBird(msg);
 		return;
 	}
 });
 
-telegramBot.onText(/\/status/, (msg) => {
+telegramBot.onText(/^\/status$/, (msg) => {
 	if (msg.chat.id != process.env.CHAT_ID_ADMIN) return;
 	
-	telegramBot.sendMessage(msg.chat.id, "healthy");
+	telegramBot.sendMessage(msg.chat.id, "Healthy");
 })
+
+telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
+	if (msg.chat.id != process.env.CHAT_ID_ADMIN) return;
+
+	const arg = match[1] || null;
+
+	if (arg) {
+		const data = await getYoutubeData(id, process.env.YOUTUBE_API_KEY);
+
+		if (data && data.title && data.description) {
+			const titleAndDescription = data.title + data.description;
+			const answer = await callGptYoutube(titleAndDescription);
+
+			telegramBot.sendMessage(msg.chat.id, `Test Result: ${answer}`);
+		}
+	} else {
+		telegramBot.sendMessage(msg.chat.id, `Wrong args`);
+	}
+});
+
+telegramBot.setMyCommands([
+	{ command: "status", description: "" },
+	{ commnad: "test", descripttion: "" },
+]);
 
 telegramBot.on("polling_error", console.log);
