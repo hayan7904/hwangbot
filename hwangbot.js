@@ -83,7 +83,8 @@ telegramBot.on('message', async (msg) => {
 	console.log(msg.chat.id + " : " + msg.from.id + ', ' + msg.from.first_name + ', ' + msg.from.last_name + ', ' + msg.from.username);
 
 	if (msg.chat.id == process.env.CHAT_ID_COMMON) {
-		if (msg.from.id == 52186264) killBird(msg);
+		// if (msg.from.id == 52186264) killBird(msg);
+		killBird(msg);
 		return;
 	}
 });
