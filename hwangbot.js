@@ -1,4 +1,4 @@
-const { callGptYoutube, callGptVision } = require('./util/gptUtil');
+const { callGptYoutube, callGptVision } = require('./util/gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil');
 
 require('dotenv').config();
