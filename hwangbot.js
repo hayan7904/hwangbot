@@ -8,6 +8,8 @@ const telegramBot = new TelegramBotApi(
 	{polling: true}
 );
 
+console.log(process.env.TELEGRAM_BOT_KEY);
+
 const sleep = function(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -25,10 +27,10 @@ const getDate = function(unixTime) {
 
 telegramBot.on('message', async (msg) => {
 
+	console.log(msg.from.id + ', ' + msg.from.first_name + ', ' + msg.from.last_name + ', ' + msg.from.username);
+
 	// only msgs from our chat
 	if (msg.chat.id != 49819934) return;
-
-	console.log(msg.from.id + ', ' + msg.from.first_name + ', ' + msg.from.last_name + ', ' + msg.from.username);
 
 	// let answer = null;
 
