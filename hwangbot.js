@@ -101,7 +101,7 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 	const arg = match[1] || null;
 
 	if (arg) {
-		const data = await getYoutubeData(id, process.env.YOUTUBE_API_KEY);
+		const data = await getYoutubeData(arg, process.env.YOUTUBE_API_KEY);
 
 		if (data && data.title && data.description) {
 			const titleAndDescription = data.title + data.description;
@@ -109,7 +109,7 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 
 			telegramBot.sendMessage(msg.chat.id, `Test Result: ${answer}`);
 			telegramBot.sendMessage(
-				chatId, 
+				msg.chat.id, 
 				`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!</a>`,
 				{ parse_mode: "HTML" }
 			);
