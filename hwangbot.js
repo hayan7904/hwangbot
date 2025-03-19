@@ -25,7 +25,7 @@ const getDate = function(unixTime) {
 
 telegramBot.on('message', async (msg) => {
 
-	console.log([msg.chat.id] + " " + msg.from.id + ', ' + msg.from.first_name + ', ' + msg.from.last_name + ', ' + msg.from.username);
+	console.log(msg.chat.id + " : " + msg.from.id + ', ' + msg.from.first_name + ', ' + msg.from.last_name + ', ' + msg.from.username);
 
 	// let answer = null;
 
