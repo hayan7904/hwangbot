@@ -121,7 +121,7 @@ telegramBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 
 telegramBot.setMyCommands([
 	{ command: "status", description: "" },
-	{ commnad: "test", descripttion: "" },
+	{ command: "test", descripttion: "" },
 ]);
 
 telegramBot.on("polling_error", console.log);
