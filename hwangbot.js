@@ -64,7 +64,7 @@ const killBird = async function(msg) {
 	if (answer != null && answer == 'YES') {
 		const chatId = msg.chat.id;
 		const messageId = msg.message_id;
-		const userId = msg.char.from;
+		const userId = msg.from.id;
 
 		const birdTime = getDate(msg.date);
 		console.log(`[${msg.chat.id}:${msg.message_id}] Bird detected... by ${msg.from.first_name} at ${birdTime.year}-${birdTime.month}-${birdTime.day} ${birdTime.hour}:${birdTime.minute}`);
