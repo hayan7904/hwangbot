@@ -64,6 +64,7 @@ const killBird = async function(msg) {
 	if (answer != null && answer == 'YES') {
 		const chatId = msg.chat.id;
 		const messageId = msg.message_id;
+		const userId = msg.char.from;
 
 		const birdTime = getDate(msg.date);
 		console.log(`[${msg.chat.id}:${msg.message_id}] Bird detected... by ${msg.from.first_name} at ${birdTime.year}-${birdTime.month}-${birdTime.day} ${birdTime.hour}:${birdTime.minute}`);
@@ -73,7 +74,7 @@ const killBird = async function(msg) {
 		});
 		for (let i = 0; i < 15; i++) {
 			telegramBot.sendMessage(
-				chatId, 
+				userId, 
 				`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</a>`,
 				{ parse_mode: "HTML" }
 			);
