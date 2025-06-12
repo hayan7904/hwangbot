@@ -8,6 +8,8 @@ const telegramBot = new TelegramBotApi(
 	{polling: true}
 );
 
+const BLACKLISTS = [52186264, 56796388];
+
 const sleep = function(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -71,21 +73,22 @@ const killBird = async function(msg) {
 		telegramBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
 			reply_to_message_id: messageId
 		});
-		for (let i = 0; i < 15; i++) {
+
+		const NO_BIRD_COUNT = 200;
+		for (let i = 0; i < NO_BIRD_COUNT; i++) {
 			telegramBot.sendMessage(
-				chatId, 
+				chatId,
 				`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</a>`,
-				{ parse_mode: "HTML" }
+				{parse_mode: "HTML"}
 			);
-			await sleep(700);
+			await sleep(500);
 		}
 	}
 }
 
 telegramBot.on('message', async (msg) => {
 	if (msg.chat.id == process.env.CHAT_ID_COMMON) {
-		if (msg.from.id == 52186264 || msg.from.id == 56796388) killBird(msg);
-		return;
+		if (BLACKLISTS.includes(msg.from.id)) await killBird(msg);
 	}
 });
 
