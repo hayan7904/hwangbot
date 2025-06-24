@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { hwangBot } = require('./init.js');
 const { adminCheck } = require('./util/helper.js');
-const VARS = require('./util/variables.js')
+const { getNoBirdCount, setNoBirdCount } = require('./util/variables.js')
 
 hwangBot.onText(/^\/status$/, (msg) => {
 	if (!adminCheck(msg)) return;
@@ -31,7 +31,7 @@ hwangBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 hwangBot.onText(/^\/getCount$/, (msg, match) => {
     if (!adminCheck(msg)) return;
 
-    hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${VARS.NO_BIRD_COUNT}`);
+    hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${getNoBirdCount()}`);
 })
 
 hwangBot.onText(/^\/setCount(?:\s+(\d+))?$/, (msg, match) => {
@@ -41,8 +41,8 @@ hwangBot.onText(/^\/setCount(?:\s+(\d+))?$/, (msg, match) => {
 
     if (!arg || arg <= 0) return;
 
-    VARS.NO_BIRD_COUNT = arg;
-    hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${VARS.NO_BIRD_COUNT}`);
+    setNoBirdCount(arg);
+    hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${arg}`);
 })
 
 hwangBot.setMyCommands(

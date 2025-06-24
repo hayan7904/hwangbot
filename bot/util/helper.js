@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { callGptYoutube, callGptVision } = require('./gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./youtubeUtil.js');
-const { BLACKLISTS } = require('./variables.js');
+const { getBlacklist } = require('./variables.js');
 
 const sleep = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,7 +19,7 @@ const getDate = (unixTime) => {
 }
 
 const commonCheck = (msg) => {
-	return msg.chat.id == process.env.CHAT_ID_COMMON && BLACKLISTS.includes(msg.from.id)
+	return msg.chat.id == process.env.CHAT_ID_COMMON && getBlacklist().includes(msg.from.id)
 }
 
 const adminCheck = (msg) => {
