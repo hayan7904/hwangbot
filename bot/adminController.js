@@ -28,21 +28,17 @@ hwangBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 	}
 });
 
-hwangBot.onText(/^\/getCount$/, (msg, match) => {
-    if (!adminCheck(msg)) return;
-
-    hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${getNoBirdCount()}`);
-})
-
-hwangBot.onText(/^\/setCount(?:\s+(\d+))?$/, (msg, match) => {
+hwangBot.onText(/^\/count(?:\s+(\d+))?$/, (msg, match) => {
     if (!adminCheck(msg)) return;
 
     const arg = parseInt(match[1]) || null;
 
-    if (!arg || arg <= 0) return;
-
-    setNoBirdCount(arg);
-    hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${arg}`);
+    if (!arg || arg <= 0) {
+		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${getNoBirdCount()}`);
+	} else {
+		setNoBirdCount(arg);
+    	hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${arg}`);
+	}
 })
 
 hwangBot.setMyCommands(
