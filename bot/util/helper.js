@@ -68,5 +68,7 @@ const killBird = async (msg) => {
 module.exports = {
     sleep,
     getDate,
-	killBird
+	commonCheck,
+	adminCheck,
+	killBird,
 }
