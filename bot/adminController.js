@@ -3,7 +3,10 @@ const { hwangBot } = require('./init.js');
 const { adminCheck } = require('./util/helper.js');
 const { callGptYoutube, callGptVision } = require('./util/gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil.js');
-const { getNoBirdMessage, getNoBirdCount, setNoBirdMessage, setNoBirdCount } = require('./util/variables.js')
+const {
+	getNoBirdMessage, getNoBirdCount, getNoBirdDelay,
+	setNoBirdMessage, setNoBirdCount, setNoBirdDelay,
+} = require('./util/variables.js')
 const { logger } = require('../winston/logger.js');
 
 hwangBot.onText(/^\/status$/, (msg) => {
@@ -59,12 +62,27 @@ hwangBot.onText(/^\/count(?:\s+(\d+))?$/, (msg, match) => {
 	}
 });
 
+hwangBot.onText(/^\/delay(?:\s+(\d+))?$/, (msg, match) => {
+    if (!adminCheck(msg)) return;
+
+    const arg = parseInt(match[1]) || null;
+
+    if (arg && arg > 0) {
+		setNoBirdDelay(arg);
+		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_DELAY -> ${arg}`);
+		logger.info(`ADMIN | NO_BIRD_DELAY -> ${arg}`)
+	} else {
+		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_DELAY : ${getNoBirdDelay()}`);
+	}
+});
+
 hwangBot.setMyCommands(
 	[
 		{ command: "/status", description: "bot status" },
 		{ command: "/test", description: "/test youtube_id" },
 		{ command: "/msg", description: "/msg (?:\"string\")" },
 		{ command: "/count", description: "/count (?:number)" },
+		{ command: "/delay", description: "/delay (?:number)" },
 	], 
-	{ scope: { type: "chat", chat_id: 49819934} }
+	{ scope: { type: "chat", chat_id: process.env.CHAT_ID_ADMIN} }
 );

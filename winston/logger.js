@@ -1,10 +1,8 @@
-const winston = require("winston");
-const winstonDaily = require("winston-daily-rotate-file");
-const appRoot = require("app-root-path");
-const { createLogger } = require("winston");
-const process = require("process");
-const { create } = require("domain");
-const { formToJSON } = require("axios");
+const winston = require('winston');
+const winstonDaily = require('winston-daily-rotate-file');
+const appRoot = require('app-root-path');
+const { createLogger } = require('winston');
+const moment = require('moment-timezone');
 
 const { combine, timestamp, printf } = winston.format;
 
@@ -16,20 +14,18 @@ const logFormat = printf(({ level, timestamp, message }) => {
 const logger = createLogger({
     format: combine(
         timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss a',
+            format: () => moment().tz('Asiz/Seoul').format('YYYY-MM-DD HH:mm:ss')
         }),
         logFormat,
     ),
     transports: [
-        new winstonDaily({
+        new winston.transports.File({
             level: "info",
-            dirname: logDir,
-            filename: `info.log`,
+            filename: `${logDir}/info.log`,
         }),
-        new winstonDaily({
+        new winston.transports.File({
             level: "error",
-            dirname: logDir,
-            filename: `error.log`,
+            filename: `${logDir}/error.log`,
         }),
         new winston.transports.Console({
             level: "http",

@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { hwangBot } = require('./init.js');
 const { commonCheck, killBird } = require('./util/helper.js');
-const VARS = require('./util/variables.js')
+const { getNoBirdMessage, getNoBirdCount, getNoBirdDelay } = require('./util/variables.js')
 const { logger } = require('../winston/logger.js')
 
 hwangBot.on('message', async (msg) => {
@@ -15,17 +15,21 @@ hwangBot.on('message', async (msg) => {
 
 		logger.info(`COMMON | Bird detected... < ${msg.chat.id}:${msg.message_id}:${msg.from.first_name}`)
 
-		hwangBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
+		const NO_BIRD_MESSAGE = getNoBirdMessage();
+		const NO_BIRD_COUNT = getNoBirdCount();
+		const NO_BIRD_DELAY = getNoBirdDelay();
+
+		hwangBot.sendMessage(chatId, `${NO_BIRD_MESSAGE}`, {
 			reply_to_message_id: messageId
 		});
 
-		for (let i = 0; i < VARS.NO_BIRD_COUNT; i++) {
+		for (let i = 0; i < NO_BIRD_COUNT; i++) {
 			hwangBot.sendMessage(
 				chatId,
-				`<a href="tg://user?id=${msg.from.id}">조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</a>`,
+				`<a href="tg://user?id=${msg.from.id}">${NO_BIRD_MESSAGE}</a>`,
 				{parse_mode: "HTML"}
 			);
-			await sleep(500);
+			await sleep(NO_BIRD_DELAY);
 		}
 	})
 });
