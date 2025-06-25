@@ -18,12 +18,12 @@ const getNoBirdCount = () => getJsonData().NO_BIRD_COUNT
 const getBlacklist = () => getJsonData().BLACKLIST;
 
 const setNoBirdMessage = (msg) => {
-    const data = JSON.parse(jsonStr);
+    const data = getJsonData();
     data.NO_BIRD_MESSAGE = msg;
     saveJsonData(data);
 }
 const setNoBirdCount = (count) => {
-    const data = JSON.parse(jsonStr);
+    const data = getJsonData();
     data.NO_BIRD_COUNT = count;
     saveJsonData(data);
 }
