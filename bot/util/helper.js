@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { hwangBot } = require('./init.js');
+const { hwangBot } = require('../init.js');
 const { callGptYoutube, callGptVision } = require('./gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./youtubeUtil.js');
 const { getBlacklist } = require('./variables.js');
