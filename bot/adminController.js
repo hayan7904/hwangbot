@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { hwangBot } = require('./init.js');
 const { adminCheck } = require('./util/helper.js');
+const { callGptYoutube, callGptVision } = require('./util/gptUtil.js');
+const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil.js');
 const { getNoBirdMessage, getNoBirdCount, setNoBirdMessage, setNoBirdCount } = require('./util/variables.js')
 const { logger } = require('../winston/logger.js');
 
@@ -37,11 +39,11 @@ hwangBot.onText(/^\/msg(?:\s+"(.*)")?$/, (msg, match) => {
     if (arg && arg.trim()) {
 		setNoBirdMessage(arg);
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_MESSAGE -> ${arg}`);
-		logger.info(`ADMIN | NO_BIRD_MESSAGE -> ${arg}`)
+		logger.info(`ADMIN | NO_BIRD_MESSAGE -> ${arg}`);
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_MESSAGE : ${getNoBirdMessage()}`);
 	}
-})
+});
 
 hwangBot.onText(/^\/count(?:\s+(\d+))?$/, (msg, match) => {
     if (!adminCheck(msg)) return;
@@ -55,7 +57,7 @@ hwangBot.onText(/^\/count(?:\s+(\d+))?$/, (msg, match) => {
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${getNoBirdCount()}`);
 	}
-})
+});
 
 hwangBot.setMyCommands(
 	[
