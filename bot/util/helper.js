@@ -2,6 +2,7 @@ require('dotenv').config();
 const { callGptYoutube, callGptVision } = require('./gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./youtubeUtil.js');
 const { getBlacklist } = require('./variables.js');
+const { logger } = require('../../winston/logger.js');
 
 const sleep = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,8 +33,8 @@ const killBird = async (msg) => {
 		const fileId = msg.photo[fileIdx].file_id;
 		const file = await hwangBot.getFile(fileId);
 
-		console.log('File Path: ', file.file_path);
-
+		logger.http(`File Path: ${file.file_path}`);
+		
 		return callGptVision(process.env.TELEGRAM_BOT_KEY, file.file_path);
 	} else if (msg.entities) {
 		let myUrl = null;

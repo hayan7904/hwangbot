@@ -13,7 +13,7 @@ hwangBot.on('message', async (msg) => {
 		const chatId = msg.chat.id;
 		const messageId = msg.message_id;
 
-		logger.info(`Bird detected... < ${msg.chat.id}:${msg.message_id}:${msg.from.first_name}`)
+		logger.info(`COMMON | Bird detected... < ${msg.chat.id}:${msg.message_id}:${msg.from.first_name}`)
 
 		hwangBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
 			reply_to_message_id: messageId
@@ -30,4 +30,6 @@ hwangBot.on('message', async (msg) => {
 	})
 });
 
-hwangBot.on("polling_error", console.log);
+hwangBot.on("polling_error", (err) => {
+	logger.error(`bot polling_error : ${err}`)
+});

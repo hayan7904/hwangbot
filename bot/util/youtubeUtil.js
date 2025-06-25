@@ -27,7 +27,7 @@ const getYoutubeData = (id, key) => {
     ).then((res) => {
         return res.data.items[0]?.snippet;
     }).catch((err) => {
-        console.error(err);
+        logger.error(`${err}`)
     });
 }
 

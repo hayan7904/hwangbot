@@ -37,7 +37,7 @@ hwangBot.onText(/^\/msg(?:\s+"(.*)")?$/, (msg, match) => {
     if (arg && arg.trim()) {
 		setNoBirdMessage(arg);
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_MESSAGE : ${arg}`);
-		logger.info(`NO_BIRD_MESSAGE -> ${arg}`)
+		logger.info(`ADMIN | NO_BIRD_MESSAGE -> ${arg}`)
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_MESSAGE : ${getNoBirdMessage()}`);
 	}
@@ -51,7 +51,7 @@ hwangBot.onText(/^\/count(?:\s+(\d+))?$/, (msg, match) => {
     if (arg && arg > 0) {
 		setNoBirdCount(arg);
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${arg}`);
-		logger.info(`NO_BIRD_COUNT -> ${arg}`)
+		logger.info(`ADMIN | NO_BIRD_COUNT -> ${arg}`)
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_COUNT : ${getNoBirdCount()}`);
 	}
