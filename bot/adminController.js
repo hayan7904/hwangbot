@@ -6,7 +6,7 @@ const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil.js');
 const {
 	getNoBirdMessage, getNoBirdCount, getNoBirdDelay,
 	setNoBirdMessage, setNoBirdCount, setNoBirdDelay,
-} = require('./util/variables.js')
+} = require('./util/dbUtil.js')
 const { logger } = require('../winston/logger.js');
 
 hwangBot.onText(/^\/status$/, (msg) => {
