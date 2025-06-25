@@ -12,24 +12,25 @@ const saveJsonData = (data) => {
     fs.writeFileSync('../../variables.json', JSON.stringify(data, null, 2), 'utf8');
 }
 
-const getNoBirdCount = () => {
-    const data = getJsonData();
-    return data.NO_BIRD_COUNT;
-}
+const getNoBirdMessage = () => getJsonData().NO_BIRD_MESSAGE
+const getNoBirdCount = () => getJsonData().NO_BIRD_COUNT
+const getBlacklist = () => getJsonData().BLACKLIST;
 
+const setNoBirdMessage = (msg) => {
+    const data = JSON.parse(jsonStr);
+    data.NO_BIRD_MESSAGE = msg;
+    saveJsonData(data);
+}
 const setNoBirdCount = (count) => {
     const data = JSON.parse(jsonStr);
     data.NO_BIRD_COUNT = count;
     saveJsonData(data);
 }
 
-const getBlacklist = () => {
-    const data = getJsonData();
-    return data.BLACKLIST;
-}
-
 module.exports = {
+    getNoBirdMessage,
     getNoBirdCount,
-    setNoBirdCount,
     getBlacklist,
+    setNoBirdMessage,
+    setNoBirdCount,
 }

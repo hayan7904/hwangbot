@@ -3,6 +3,7 @@ const OpenAIApi = require('openai');
 const openAI = new OpenAIApi({
     apiKey: process.env.OPENAI_KEY
 });
+const { logger } = require('../../winston/logger.js')
 
 const callGptYoutube = async (msg) => {
 	return openAI.chat.completions.create({
@@ -12,9 +13,9 @@ const callGptYoutube = async (msg) => {
 			{ role: 'user', content: msg },
 		],
 	}).then((res) => {
-		return response.choices[0].message.content;
+		return res.choices[0].message.content;
 	}).catch((error) => {
-		console.error('error: ', error);
+		logger.error(`${error}`)
 		throw error;
 	});
 }
@@ -37,9 +38,9 @@ const callGptVision = (key, filePath) => {
 			},
 		],
 	}).then((res) => {
-		return response.choices[0].message.content;
+		return res.choices[0].message.content;
 	}).catch((err) => {
-		console.error('error: ', err);
+		logger.error(`${error}`)
 		throw err;
 	});
 }

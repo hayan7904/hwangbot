@@ -1,21 +1,22 @@
 const axios = require('axios');
+const { logger } = require('../../winston/logger.js');
 
 const getYoutubeId = (url) => {
     let id = null;
     
-    if (url.inclueds('/shorts/')) {
+    if (url.includes('/shorts/')) {
         id = url.substring(url.indexOf('/shorts/') + 8);
-    } else if (url.inclueds('/watch?v=')) {
+    } else if (url.includes('/watch?v=')) {
         id = url.substring(url.indexOf('/watch?v=') + 9);
-    } else if (url.inclueds('.be/')) {
+    } else if (url.includes('.be/')) {
         id = url.substring(url.indexOf('.be/') + 4);
     }
 
-    if (id.inclueds('?')) {
+    if (id.includes('?')) {
         id = id.substring(0, id.indexOf('?'));
     }
 
-    console.log('Youtube ID: ', id);
+    logger.http(`Youtube ID: ${id}`);
 
     return id;
 }
@@ -32,6 +33,5 @@ const getYoutubeData = (id, key) => {
 
 module.exports = {
     getYoutubeId,
-    getYoutubeData
-
+    getYoutubeData,
 }

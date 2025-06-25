@@ -2,6 +2,7 @@ require('dotenv').config();
 const { hwangBot } = require('./init.js');
 const { commonCheck, killBird } = require('./util/helper.js');
 const VARS = require('./util/variables.js')
+const { logger } = require('../winston/logger.js')
 
 hwangBot.on('message', async (msg) => {
 	if (!commonCheck(msg)) return;
@@ -12,8 +13,7 @@ hwangBot.on('message', async (msg) => {
 		const chatId = msg.chat.id;
 		const messageId = msg.message_id;
 
-		const birdTime = getDate(msg.date);
-		console.log(`[${msg.chat.id}:${msg.message_id}] Bird detected... by ${msg.from.first_name} at ${birdTime.year}-${birdTime.month}-${birdTime.day} ${birdTime.hour}:${birdTime.minute}`);
+		logger.info(`Bird detected... < ${msg.chat.id}:${msg.message_id}:${msg.from.first_name}`)
 
 		hwangBot.sendMessage(chatId, '조류 그만!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', {
 			reply_to_message_id: messageId
