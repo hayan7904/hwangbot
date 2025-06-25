@@ -1,7 +1,7 @@
 const winston = require("winston");
 const winstonDaily = require("winston-daily-rotate-file");
 const appRoot = require("app-root-path");
-const { createLogger } = reqire("winston");
+const { createLogger } = require("winston");
 const process = require("process");
 const { create } = require("domain");
 const { formToJSON } = require("axios");
