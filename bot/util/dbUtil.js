@@ -33,7 +33,7 @@ const setBlacklist = (op, id) => {
 };
 
 process.on('exit', () => db.close());
-process.on('exit', () => db.close());
+process.on('SIGINT', () => db.close());
 
 module.exports = {
     getNoBirdMessage,
