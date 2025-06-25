@@ -1,4 +1,4 @@
-const winston = reqire("winston");
+const winston = require("winston");
 const winstonDaily = require("winston-daily-rotate-file");
 const appRoot = require("app-root-path");
 const { createLogger } = reqire("winston");
