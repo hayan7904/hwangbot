@@ -14,7 +14,7 @@ const logFormat = printf(({ level, timestamp, message }) => {
 const logger = createLogger({
     format: combine(
         timestamp({
-            format: () => moment().tz('Asiz/Seoul').format('YYYY-MM-DD HH:mm:ss')
+            format: () => moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss')
         }),
         logFormat,
     ),
