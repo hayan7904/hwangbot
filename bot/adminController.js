@@ -4,9 +4,9 @@ const { adminCheck } = require('./util/helper.js');
 const { callGptYoutube, callGptVision } = require('./util/gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil.js');
 const {
-	getNoBirdMessage, getNoBirdCount, getNoBirdDelay,
-	setNoBirdMessage, setNoBirdCount, setNoBirdDelay,
-} = require('./util/variables.js')
+	getNoBirdMessage, getNoBirdCount, getNoBirdDelay, getBlacklist,
+	setNoBirdMessage, setNoBirdCount, setNoBirdDelay, setBlacklist,
+} = require('./util/dbUtil.js')
 const { logger } = require('../winston/logger.js');
 
 hwangBot.onText(/^\/status$/, (msg) => {
@@ -76,6 +76,20 @@ hwangBot.onText(/^\/delay(?:\s+(\d+))?$/, (msg, match) => {
 	}
 });
 
+hwangBot.onText(/^\/black(?:\s+(add|del)\s+(\d+))?$/, (msg, match) => {
+    if (!adminCheck(msg)) return;
+
+    const op = match[1] || null;
+
+    if (op && ['add', 'del'].includes(op)) {
+		const id = parseInt(match[2]);
+		setBlacklist(op, id);
+		hwangBot.sendMessage(msg.chat.id, `BLACKLIST -> ${op.toUpperCase()}: ${id}`);
+	} else {
+		hwangBot.sendMessage(msg.chat.id, `BLACKLIST : ${getBlacklist()}`);
+	}
+});
+
 hwangBot.setMyCommands(
 	[
 		{ command: "/status", description: "bot status" },
@@ -83,6 +97,7 @@ hwangBot.setMyCommands(
 		{ command: "/msg", description: "/msg (?:\"string\")" },
 		{ command: "/count", description: "/count (?:number)" },
 		{ command: "/delay", description: "/delay (?:number)" },
+		{ command: "/black", description: "/black (?:(add|del) number)" },
 	], 
 	{ scope: { type: "chat", chat_id: process.env.CHAT_ID_ADMIN} }
 );

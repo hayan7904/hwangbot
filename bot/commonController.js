@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { hwangBot } = require('./init.js');
 const { commonCheck, killBird } = require('./util/helper.js');
-const { getNoBirdMessage, getNoBirdCount, getNoBirdDelay } = require('./util/variables.js')
+const { getNoBirdMessage, getNoBirdCount, getNoBirdDelay } = require('./util/dbUtil.js')
 const { logger } = require('../winston/logger.js')
 
 hwangBot.on('message', async (msg) => {
