@@ -30,7 +30,7 @@ const setNoBirdCount = (count) => {
 }
 const setNoBirdDelay = (delay) => {
     const data = getJsonData();
-    data.NO_BIRD_DELAY = count;
+    data.NO_BIRD_DELAY = delay;
     saveJsonData(data);
 }
 
