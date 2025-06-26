@@ -2,7 +2,7 @@ require('dotenv').config();
 const { hwangBot } = require('../init.js');
 const { callGptYoutube, callGptVision } = require('./gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./youtubeUtil.js');
-const { getBlacklist } = require('./dbUtil.js');
+const { getBlacklist } = require('./commonDBUtil.js');
 const { logger } = require('../../winston/logger.js');
 
 const sleep = (ms) => {
@@ -20,13 +20,9 @@ const getDate = (unixTime) => {
 	};
 }
 
-const commonCheck = (msg) => {
-	return msg.chat.id == process.env.CHAT_ID_COMMON && getBlacklist().includes(msg.from.id)
-}
-
-const adminCheck = (msg) => {
-	return msg.chat.id == process.env.CHAT_ID_ADMIN;
-}
+const commonCheck = (msg) => msg.chat.id == process.env.CHAT_ID_COMMON
+const commonBlackCheck = (msg) => commonCheck(msg) && getBlacklist().includes(msg.from.id)
+const adminCheck = (msg) => msg.chat.id == process.env.CHAT_ID_ADMIN;
 
 const killBird = async (msg) => {
 	if (msg.photo) {
@@ -70,7 +66,7 @@ const killBird = async (msg) => {
 module.exports = {
     sleep,
     getDate,
-	commonCheck,
+	commonBlackCheck,
 	adminCheck,
 	killBird,
 }

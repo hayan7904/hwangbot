@@ -5,8 +5,9 @@ const { callGptYoutube, callGptVision } = require('./util/gptUtil.js');
 const { getYoutubeId, getYoutubeData } = require('./util/youtubeUtil.js');
 const {
 	getNoBirdMessage, getNoBirdCount, getNoBirdDelay, getBlacklist,
-	setNoBirdMessage, setNoBirdCount, setNoBirdDelay, setBlacklist,
-} = require('./util/dbUtil.js')
+	setNoBirdMessage, setNoBirdCount, setNoBirdDelay,
+	insertBlacklist, deleteBlacklist,
+} = require('./util/commonDBUtil.js')
 const { logger } = require('../winston/logger.js');
 
 hwangBot.onText(/^\/status$/, (msg) => {
@@ -70,7 +71,7 @@ hwangBot.onText(/^\/delay(?:\s+(\d+))?$/, (msg, match) => {
     if (arg && arg > 0) {
 		setNoBirdDelay(arg);
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_DELAY -> ${arg}`);
-		logger.info(`ADMIN | NO_BIRD_DELAY -> ${arg}`)
+		logger.info(`ADMIN | NO_BIRD_DELAY -> ${arg}`);
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `NO_BIRD_DELAY : ${getNoBirdDelay()}`);
 	}
@@ -83,8 +84,32 @@ hwangBot.onText(/^\/black(?:\s+(add|del)\s+(\d+))?$/, (msg, match) => {
 
     if (op && ['add', 'del'].includes(op)) {
 		const id = parseInt(match[2]);
-		setBlacklist(op, id);
-		hwangBot.sendMessage(msg.chat.id, `BLACKLIST -> ${op.toUpperCase()}: ${id}`);
+		const blacklist = getBlacklist();
+		const res = null;
+		
+		if (op == 'add') {
+			if (!blacklist.includes(id)) {
+				res = insertBlacklist(id);
+			} else {
+				hwangBot.sendMessage(msg.chat.id, `BLACKLIST -> ${op.toUpperCase()}: 이미 존재하는 id입니다.`);
+				return;
+			}
+		} else if (op == 'del') {
+			if (blacklist.includes(id)) {
+				res = deleteBlacklist(id);
+			} else {
+				hwangBot.sendMessage(msg.chat.id, `BLACKLIST -> ${op.toUpperCase()}: 존재하지 않는 id입니다.`);
+				return;
+			}
+		}
+
+		if (res?.changes > 0) {
+			hwangBot.sendMessage(msg.chat.id, `BLACKLIST -> ${op.toUpperCase()}: ${id}`);
+			logger.info(`ADMIN | BLACKLIST -> ${op.toUpperCase()}: ${id}`);
+		} else {
+			hwangBot.sendMessage(msg.chat.id, `BLACKLIST -> ${op.toUpperCase()}: 실패`);
+			logger.info(`ADMIN | BLACKLIST -> ${op.toUpperCase()}: 실패`);
+		}
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `BLACKLIST : ${getBlacklist()}`);
 	}
