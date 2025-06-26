@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { hwangBot } = require('./init.js');
-const { commonCheck, killBird } = require('./util/helper.js');
+const { commonCheck, sleep, killBird } = require('./util/helper.js');
 const { getNoBirdMessage, getNoBirdCount, getNoBirdDelay } = require('./util/dbUtil.js')
 const { logger } = require('../winston/logger.js')
 
@@ -8,7 +8,7 @@ hwangBot.on('message', async (msg) => {
 	if (!commonCheck(msg)) return;
 
 	killBird(msg).then(async (ans) => {
-		if (!ans) return;
+		if (!ans || ans != 'YES') return;
 
 		const chatId = msg.chat.id;
 		const messageId = msg.message_id;

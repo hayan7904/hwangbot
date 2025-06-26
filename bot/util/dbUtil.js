@@ -28,7 +28,7 @@ const setBlacklist = (op, id) => {
     if (op == 'add' && !blacklist.includes(id)) {
         insertStmt.run([keys.blacklist, id]);
     } else if (op == 'del' && blacklist.includes(id)) {
-        deleteStmt.run([keys.blacklist, id])
+        deleteStmt.run([keys.blacklist, id]);
     }
 };
 
