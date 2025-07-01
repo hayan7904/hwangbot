@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["bot/*"],
+            "@util/*": ["bot/util/*"],
+            "@logger/*": ["winston/*"]
+        }
+    },
+    "exclude": ["node_modules"]
+}
