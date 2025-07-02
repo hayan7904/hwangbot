@@ -124,7 +124,7 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 			<b>📝 스티커 명령어 목록:</b>\n\n
 			<code>/sticker queue</code>\n
 			<code>/sticker queue clear</code>\n
-			<code>/sticker list</code>\n
+			<code>/sticker list </code>\n
 			<code>/sticker create </code>\n
 			<code>/sticker permit </code>\n
 			<code>/sticker delete </code>\n
