@@ -92,9 +92,14 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
                 return;
             }
 
-            const ctitle = await getConData(cid).then(res => res.title);
-            const item = [msg.from.id, msg.from.first_name, cid, ctitle];
+            const ctitle = await getConData(cid).then(res => res?.title);
 
+            if (!ctitle) {
+                hwangBot.sendMessage(msg.chat.id, '<b>❌ 디시콘을 찾을 수 없습니다.</b>', {parse_mode: "HTML"});
+                return;
+            }
+
+            const item = [msg.from.id, msg.from.first_name, cid, ctitle];
             const res = insertQueueItem(item);
 
             if (res?.changes > 0) {
@@ -111,7 +116,6 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
                 );
             }
         } catch (err) {
-            hwangBot.sendMessage(msg.chat.id, '<b>❌ 디시콘을 찾을 수 없습니다.</b>', {parse_mode: "HTML"});
             logger.error(err.stack);
         }
     } else if (op == 'permit' && Number(arg) && adminUserCheck(msg)) {
