@@ -5,7 +5,7 @@ const { hwangBot } = require('@/init.js');
 const { commonCheck, blackCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper.js');
 const { progressState, getConData, downloadCon, convertCon } = require('@util/stickerHelper.js');
 const { getQueue, getQueueItemById, getQueueItemByConId, insertQueueItem, deleteAllQueue, deleteQueueItem,
-        getPackage, getPackageItemByConId, insertPackageItem, deletePackageItem,
+        getPackage, getPackageCount, getPackageItemByConId, insertPackageItem, deletePackageItem,
 } = require('@util/db/stickerDBUtil.js');
 const { logger } = require('@logger/logger.js')
 
@@ -72,9 +72,11 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
 
         hwangBot.sendMessage(msg.chat.id, res, {parse_mode: "HTML"});
     } else if (op === 'list') {
-        const package = getPackage();
+        const total = Math.max(Math.ceil(getPackageCount() / 10), 1);
+        const page = Number(arg) ? Math.max(parseInt(arg), total) : 1;
+        const package = getPackage(page);
 
-        let res = '<b>📌 스티커팩 목록:</b>\n\n';
+        let res = `<b>📌 [${page}/${total}] 스티커팩 목록:</b>\n\n`;
         if (package.length > 0) {
             res += [ ...package.map((item, idx) => packageMapper(item, idx))].join('\n');
         } else {
@@ -92,9 +94,14 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
                 return;
             }
 
-            const ctitle = await getConData(cid).then(res => res.title);
-            const item = [msg.from.id, msg.from.first_name, cid, ctitle];
+            const ctitle = await getConData(cid).then(res => res?.title);
 
+            if (!ctitle) {
+                hwangBot.sendMessage(msg.chat.id, `<b>❌ 디시콘을 찾을 수 없습니다.</b>`, {parse_mode: "HTML"});
+                return;
+            }
+
+            const item = [msg.from.id, msg.from.first_name, cid, ctitle];
             const res = insertQueueItem(item);
 
             if (res?.changes > 0) {
