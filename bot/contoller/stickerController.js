@@ -72,7 +72,8 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
 
         hwangBot.sendMessage(msg.chat.id, res, {parse_mode: "HTML"});
     } else if (op === 'list') {
-        const total = Math.max(Math.ceil(getPackageCount() / 10), 1);
+        const pageSize = process.env.PACKAGE_PAGE_SIZE;
+        const total = Math.max(Math.ceil(getPackageCount() / pageSize), 1);
         const page = Number(arg) ? Math.max(parseInt(arg), total) : 1;
         const package = getPackage(page);
 
