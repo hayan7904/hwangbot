@@ -28,7 +28,7 @@ const workInfo = {
     max: 0,
     start(item) {
         this.item.push(item);
-        this.state = '정보 불러오는 중';
+        this.state = '🌐 데이터 가져오는 중';
         this.curr = 0;
         this.max = item.con_length;
     },
