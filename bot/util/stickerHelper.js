@@ -21,10 +21,53 @@ const convertPath = `${appRoot}/download/convert`;
 const MAX_SIZE_STATIC = 512 * 1024 // 512kb
 const MAX_SIZE_VIDEO = 256 * 1024 // 256kb
 
-const progressState = {
+const workInfo = {
+    item: [],
+    state: '',
     curr: 0,
     max: 0,
-};
+    start(item) {
+        this.item.push(item);
+        this.state = '🌐 데이터 가져오는 중';
+        this.curr = 0;
+        this.max = item.con_length;
+    },
+    complete(state) {
+        this.item.shift();
+        this.state = '';
+        this.curr = 0;
+        this.max = 0;
+    },
+    isWorking() {
+        return this.item.length > 0;
+    },
+    setState(state) {
+        this.state = state;
+        this.curr = 0;
+    },
+    progress() {
+        this.curr++;
+    },
+    getProgress() {
+        return {
+            item: this.item[0],
+            state: this.state,
+            curr: this.curr,
+            max: this.max
+        };
+    }
+}
+
+const LINK_DCCON = 0;
+const LINK_STICKER = 1;
+
+const getLink = (type, arg) => {
+    if (type == LINK_DCCON) {
+        return `https://dccon.dcinside.com/#${arg}`;
+    } else if (type == LINK_STICKER) {
+        return `https://t.me/addstickers/${arg}`;
+    }
+}
 
 const getConData = async (cid) => {
     const cookies = await axios.get(mainPageUrl).then(res => res.headers['set-cookie']);
@@ -87,7 +130,7 @@ const downloadCon = async (conData) => {
             filename,
             ext
         });
-        progressState.curr++;
+        workInfo.progress();
     }
 
     return downloadResult;
@@ -168,7 +211,7 @@ const convertCon = async (downloadResult) => {
         }
 
         convertResult.push({ filepath: output, ext: newExt });
-        progressState.curr++;
+        workInfo.progress();
 
         const outputSize = Math.floor(fs.statSync(output).size / 1024);
         const outputDuration = newExt == 'webm' ? await getWebmDuration(output) : '-';
@@ -180,7 +223,10 @@ const convertCon = async (downloadResult) => {
 }
 
 module.exports = {
-    progressState,
+    LINK_DCCON,
+    LINK_STICKER,
+    workInfo,
+    getLink,
     getConData,
     downloadCon,
     convertCon

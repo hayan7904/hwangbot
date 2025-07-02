@@ -5,7 +5,7 @@ const db = new Database(`${appRoot}/sticker.db`);
 const selectAllStickerStmt = db.prepare(`SELECT * FROM sticker`);
 const selectStickerByIdStmt = db.prepare(`SELECT * FROM sticker WHERE id=?`);
 const selectStickerByConIdStmt = db.prepare(`SELECT * FROM sticker WHERE con_id=?`);
-const insertStickerStmt = db.prepare(`INSERT INTO sticker (user_id, user_name, con_id, con_title) VALUES (?, ?, ?, ?)`);
+const insertStickerStmt = db.prepare(`INSERT INTO sticker (user_id, user_name, con_id, con_title, con_length) VALUES (?, ?, ?, ?, ?)`);
 const deleteAllStickerStmt = db.prepare(`DELETE FROM sticker`);
 const deleteStickerByIdStmt = db.prepare(`DELETE FROM sticker WHERE id=?`);
 
