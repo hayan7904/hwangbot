@@ -26,7 +26,7 @@ const getYoutubeData = async (id, key) => {
         const res = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${id}&key=${key}&part=snippet`);
         return res.data.items[0]?.snippet;
     } catch (err) {
-        logger.err(err.stack);
+        logger.error(err.stack);
     }
 }
 

@@ -32,7 +32,7 @@ const killBird = async (msg) => {
 	if (msg.photo) {
 		const fileIdx = Math.max(msg.photo.length - 2, 0);
 		const fileId = msg.photo[fileIdx].file_id;
-		const file = await hwangBot.getFile(fileId).catch(err => { logger.err(err.stack); });
+		const file = await hwangBot.getFile(fileId).catch(err => { logger.error(err.stack); });
 
 		if (file) ans = await callGptVision(process.env.TELEGRAM_BOT_KEY, file.file_path);
 	} else if (msg.entities) {
