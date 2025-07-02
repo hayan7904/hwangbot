@@ -16,12 +16,16 @@ const insertQueueItem = (args) => insertStickerStmt.run(args);
 const deleteAllQueue = () => deleteAllStickerStmt.run();
 const deleteQueueItem = (id) => deleteStickerByIdStmt.run([id]);
 
-const selectAllPackageStmt = db.prepare(`SELECT * FROM package`);
+const selectAllPackageStmt = db.prepare(`SELECT * FROM package LIMIT ? OFFSET ?`);
+const selectAllPackageCountStmt = db.prepare(`SELECT COUNT(*) AS total FROM package`);
 const selectPackageByConIdStmt = db.prepare(`SELECT * FROM package WHERE con_id=?`);
 const insertPackageStmt = db.prepare(`INSERT INTO package (con_id, con_title, pack_name) VALUES (?, ?, ?)`);
 const deletePackageByConIdStmt = db.prepare(`DELETE FROM package WHERE con_id=?`)
 
-const getPackage = () => selectAllPackageStmt.all();
+const pageSize = process.env.PACKAGE_PAGE_SIZE;
+
+const getPackage = (page = 1) => selectAllPackageStmt.all(pageSize, (page - 1) * pageSize);
+const getPackageCount = () => selectAllPackageCountStmt.get().total;
 const getPackageItemByConId = (cid) => selectPackageByConIdStmt.get([cid]);
 const insertPackageItem = (args) => insertPackageStmt.run(args);
 const deletePackageItem = (cid) => deletePackageByConIdStmt.run([cid]);
@@ -34,6 +38,7 @@ module.exports = {
     deleteAllQueue,
     deleteQueueItem,
     getPackage,
+    getPackageCount,
     getPackageItemByConId,
     insertPackageItem,
     deletePackageItem
