@@ -111,7 +111,8 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
                 );
             }
         } catch (err) {
-            logger.err(err.stack);
+            hwangBot.sendMessage(msg.chat.id, '<b>❌ 디시콘을 찾을 수 없습니다.</b>', {parse_mode: "HTML"});
+            logger.error(err.stack);
         }
     } else if (op == 'permit' && Number(arg) && adminUserCheck(msg)) {
         if (inProgress.length > 0) {

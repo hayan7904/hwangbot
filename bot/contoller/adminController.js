@@ -28,7 +28,7 @@ hwangBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 			const titleAndDescription = data.title + data.description;
 			const ans = await callGptYoutube(titleAndDescription);
 
-			hwangBot.sendMessage(msg.chat.id, `<b>📄 Test Result:</b> <i>${ans}</i>`, {parse_mode: "HTML"});
+			hwangBot.sendMessage(msg.chat.id, `<b>📋 Test Result:</b> <i>${ans}</i>`, {parse_mode: "HTML"});
 		}
 	} else {
 		hwangBot.sendMessage(msg.chat.id, `<b>❌ Wrong arg</b>`, {parse_mode: "HTML"});
@@ -121,7 +121,7 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 
 	hwangBot.sendMessage(msg.chat.id,
 		`
-			<b>📝 스티커 명령어 목록:</b>\n\n
+			<b>📝 스티커 명령어 목록:</b>\n
 			<code>/sticker queue</code>\n
 			<code>/sticker queue clear</code>\n
 			<code>/sticker list</code>\n

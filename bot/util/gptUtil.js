@@ -16,7 +16,7 @@ const callGptYoutube = async (msg) => {
 		});
 		return res.choices[0].message.content;
 	} catch (err) {
-		logger.err(err.stack);
+		logger.error(err.stack);
 	}
 }
 
@@ -41,7 +41,7 @@ const callGptVision = async (key, filePath) => {
 		})
 		return res.choices[0].message.content;
 	} catch (err) {
-		logger.err(err.stack);
+		logger.error(err.stack);
 	}
 }
 
