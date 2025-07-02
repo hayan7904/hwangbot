@@ -13,7 +13,7 @@ const { logger } = require('@logger/logger.js');
 hwangBot.onText(/^\/status$/, (msg) => {
 	if (!adminChatCheck(msg)) return;
 	
-	hwangBot.sendMessage(msg.chat.id, `<b>✔ Healthy</b>`, {parse_mode: "HTML"});
+	hwangBot.sendMessage(msg.chat.id, '<b>✔ Healthy</b>', {parse_mode: "HTML"});
 })
 
 hwangBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
@@ -31,7 +31,7 @@ hwangBot.onText(/^\/test(?:\s+(\S+))?$/, async (msg, match) => {
 			hwangBot.sendMessage(msg.chat.id, `<b>📋 Test Result:</b> <i>${ans}</i>`, {parse_mode: "HTML"});
 		}
 	} else {
-		hwangBot.sendMessage(msg.chat.id, `<b>❌ Wrong arg</b>`, {parse_mode: "HTML"});
+		hwangBot.sendMessage(msg.chat.id, '<b>❌ Wrong arg</b>', {parse_mode: "HTML"});
 	}
 });
 
@@ -91,14 +91,14 @@ hwangBot.onText(/^\/black(?:\s+(add|del)\s+(\d+))?$/, (msg, match) => {
 			if (!blacklist.includes(id)) {
 				res = insertBlacklist(id);
 			} else {
-				hwangBot.sendMessage(msg.chat.id, `<b>❌ BLACKLIST:</b> 이미 존재하는 ID입니다.`, {parse_mode: "HTML"});
+				hwangBot.sendMessage(msg.chat.id, '<b>❌ BLACKLIST:</b> 이미 존재하는 ID입니다.', {parse_mode: "HTML"});
 				return;
 			}
 		} else if (op == 'del') {
 			if (blacklist.includes(id)) {
 				res = deleteBlacklist(id);
 			} else {
-				hwangBot.sendMessage(msg.chat.id, `<b>❌ BLACKLIST:</b> 존재하지 않는 ID입니다.`, {parse_mode: "HTML"});
+				hwangBot.sendMessage(msg.chat.id, '<b>❌ BLACKLIST:</b> 존재하지 않는 ID입니다.', {parse_mode: "HTML"});
 				return;
 			}
 		}
@@ -127,7 +127,7 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 			<code>/sticker list </code>\n
 			<code>/sticker create </code>\n
 			<code>/sticker permit </code>\n
-			<code>/sticker delete </code>\n
+			<code>/sticker delete </code>\n\n
 		`, {parse_mode: "HTML"}
 	);
 });

@@ -91,14 +91,14 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
 
             const dupCheck = getPackageItemByConId(cid) || getQueueItemByConId(cid);
             if (dupCheck) {
-                hwangBot.sendMessage(msg.chat.id, `<b>❌ 이미 제작중이거나 제작 완료된 스티커입니다.</b>`, {parse_mode: "HTML"});
+                hwangBot.sendMessage(msg.chat.id, '<b>❌ 이미 제작중이거나 제작 완료된 스티커입니다.</b>', {parse_mode: "HTML"});
                 return;
             }
 
             const ctitle = await getConData(cid).then(res => res?.title);
 
             if (!ctitle) {
-                hwangBot.sendMessage(msg.chat.id, `<b>❌ 디시콘을 찾을 수 없습니다.</b>`, {parse_mode: "HTML"});
+                hwangBot.sendMessage(msg.chat.id, '<b>❌ 디시콘을 찾을 수 없습니다.</b>', {parse_mode: "HTML"});
                 return;
             }
 
