@@ -45,6 +45,8 @@ const getConData = async (cid) => {
         { headers: reqHeaders },
     ).then(res => res.data);
 
+    if (!conData || conData == 'error') return;
+
     const info = conData.info;
     const detail = conData.detail;
 
