@@ -21,8 +21,8 @@ const getDate = (unixTime) => {
 }
 
 const commonCheck = (msg) => msg.chat.id == process.env.CHAT_ID_COMMON
-const blackCheck = (msg) => getBlacklist().includes(msg.from.id)
-const commonBlackCheck = (msg) => commonCheck(msg) && blackCheck(msg)
+const blacklistCheck = (msg) => getBlacklist().includes(msg.from.id)
+const commonBlacklistCheck = (msg) => commonCheck(msg) && blacklistCheck(msg)
 const adminUserCheck = (msg) => msg.from.id == process.env.CHAT_ID_ADMIN;
 const adminChatCheck = (msg) => msg.chat.id == process.env.CHAT_ID_ADMIN;
 
@@ -32,7 +32,7 @@ const killBird = async (msg) => {
 	if (msg.photo) {
 		const fileIdx = Math.max(msg.photo.length - 2, 0);
 		const fileId = msg.photo[fileIdx].file_id;
-		const file = await hwangBot.getFile(fileId).catch(err => { logger.err(err.stack); });
+		const file = await hwangBot.getFile(fileId).catch(err => { logger.error(err.stack); });
 
 		if (file) ans = await callGptVision(process.env.TELEGRAM_BOT_KEY, file.file_path);
 	} else if (msg.entities) {
@@ -69,8 +69,8 @@ module.exports = {
     sleep,
     getDate,
 	commonCheck,
-	blackCheck,
-	commonBlackCheck,
+	blacklistCheck,
+	commonBlacklistCheck,
 	adminUserCheck,
 	adminChatCheck,
 	killBird,
