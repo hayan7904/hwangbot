@@ -1,11 +1,11 @@
 require('dotenv').config();
 const { hwangBot } = require('@/init.js');
-const { commonBlackCheck, sleep, killBird } = require('@util/commonHelper.js');
+const { commonBlacklistCheck, sleep, killBird } = require('@util/commonHelper.js');
 const { getNoBirdMessage, getNoBirdCount, getNoBirdDelay } = require('@util/db/commonDBUtil.js')
 const { logger } = require('@logger/logger.js')
 
 hwangBot.on('message', async (msg) => {
-	if (!commonBlackCheck(msg)) return;
+	if (!commonBlacklistCheck(msg)) return;
 
 	const ans = await killBird(msg);
 

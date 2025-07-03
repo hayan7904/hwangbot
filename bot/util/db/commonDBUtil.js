@@ -6,6 +6,7 @@ const keys = {
     noBirdCnt: "NO_BIRD_COUNT",
     noBirdDly: "NO_BIRD_DELAY",
     blacklist: "BLACKLIST",
+    blacklistFlag: "BLACKLIST_FLAG",
 };
 
 const db = new Database(`${appRoot}/variable.db`);
@@ -18,6 +19,7 @@ const getNoBirdMessage = () => selectByKeyStmt.get(keys.noBirdMsg)?.value;
 const getNoBirdCount = () => parseInt(selectByKeyStmt.get(keys.noBirdCnt)?.value);
 const getNoBirdDelay = () => parseInt(selectByKeyStmt.get(keys.noBirdDly)?.value);
 const getBlacklist = () => selectByKeyStmt.all(keys.blacklist).map((row) => parseInt(row.value));
+const getBlacklistFlag = () => selectByKeyStmt.get(keys.blacklistFlag)?.value == 'YES';
 
 const setNoBirdMessage = (msg) => updateByKeyStmt.run([msg, keys.noBirdMsg]);
 const setNoBirdCount = (count) => updateByKeyStmt.run([count, keys.noBirdCnt]);
@@ -33,6 +35,7 @@ module.exports = {
     getNoBirdCount,
     getNoBirdDelay,
     getBlacklist,
+    getBlacklistFlag,
     setNoBirdMessage,
     setNoBirdCount,
     setNoBirdDelay,

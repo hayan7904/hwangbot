@@ -2,8 +2,9 @@ require('dotenv').config();
 const fs = require('fs');
 const crypto = require('crypto');
 const { hwangBot } = require('@/init.js');
-const { commonCheck, blackCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper.js');
+const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper.js');
 const { workInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper.js');
+const { getBlacklistFlag } = require('@util/db/commonDBUtil.js');
 const { getQueue, getQueueItemById, getQueueItemByConId, insertQueueItem, deleteAllQueue, deleteQueueItem,
         getPackage, getPackageCount, getPackageItemByConId, insertPackageItem, deletePackageItem,
 } = require('@util/db/stickerDBUtil.js');
@@ -26,7 +27,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|start|delete)(?:[\s]+(clear|[0-
     const op = match[1] || null;
     const arg = match[2] || null;
 
-    if (!op || (process.env.STICKER_APPLY_BLACKLIST && blackCheck(msg))) return;
+    if (!op || (getBlacklistFlag() && blacklistCheck(msg))) return;
 
     if (op === 'queue') {
         if (arg && arg == 'clear' && adminUserCheck(msg)) {

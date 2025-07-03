@@ -21,8 +21,8 @@ const getDate = (unixTime) => {
 }
 
 const commonCheck = (msg) => msg.chat.id == process.env.CHAT_ID_COMMON
-const blackCheck = (msg) => getBlacklist().includes(msg.from.id)
-const commonBlackCheck = (msg) => commonCheck(msg) && blackCheck(msg)
+const blacklistCheck = (msg) => getBlacklist().includes(msg.from.id)
+const commonBlacklistCheck = (msg) => commonCheck(msg) && blacklistCheck(msg)
 const adminUserCheck = (msg) => msg.from.id == process.env.CHAT_ID_ADMIN;
 const adminChatCheck = (msg) => msg.chat.id == process.env.CHAT_ID_ADMIN;
 
@@ -69,8 +69,8 @@ module.exports = {
     sleep,
     getDate,
 	commonCheck,
-	blackCheck,
-	commonBlackCheck,
+	blacklistCheck,
+	commonBlacklistCheck,
 	adminUserCheck,
 	adminChatCheck,
 	killBird,
