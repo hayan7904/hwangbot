@@ -74,7 +74,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|create|permit|delete)(?:[\s]+(clear|
     } else if (op === 'list') {
         const pageSize = process.env.PACKAGE_PAGE_SIZE;
         const total = Math.max(Math.ceil(getPackageCount() / pageSize), 1);
-        const page = Number(arg) ? Math.max(parseInt(arg), total) : 1;
+        const page = Number(arg) ? parseInt(arg) <= total ? parseInt(arg) > 0 ? parseInt(arg) : 1 : total : 1;
         const package = getPackage(page);
 
         let res = `<b>📌 [${page}/${total}] 스티커팩 목록:</b>\n\n`;
