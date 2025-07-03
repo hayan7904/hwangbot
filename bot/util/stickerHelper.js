@@ -58,13 +58,16 @@ const workInfo = {
     }
 }
 
-const LINK_DCCON = 0;
-const LINK_STICKER = 1;
+const TYPE_DCCON = 0;
+const TYPE_ARCACON = 1;
+const TYPE_STICKER = 2;
 
 const getLink = (type, arg) => {
-    if (type == LINK_DCCON) {
+    if (type == TYPE_DCCON) {
         return `https://dccon.dcinside.com/#${arg}`;
-    } else if (type == LINK_STICKER) {
+    } else if (type == TYPE_ARCACON) {
+        return `https://t.me/addstickers/${arg}`;
+    } else if (type == TYPE_STICKER) {
         return `https://t.me/addstickers/${arg}`;
     }
 }
@@ -223,8 +226,9 @@ const convertCon = async (downloadResult) => {
 }
 
 module.exports = {
-    LINK_DCCON,
-    LINK_STICKER,
+    TYPE_DCCON,
+    TYPE_ARCACON,
+    TYPE_STICKER,
     workInfo,
     getLink,
     getConData,
