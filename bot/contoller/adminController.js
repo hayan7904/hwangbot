@@ -123,20 +123,20 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 				<b>📝 스티커 명령어 목록:</b>\n
 				<code>/sticker queue</code>\n
 				<code>/sticker queue clear</code>\n
-				<code>/sticker list </code>\n
-				<code>/sticker make </code>\n
-				<code>/sticker start </code>\n
-				<code>/sticker delete </code>\n\n
+				<code>/sticker list </code>&lt;<i>page?</i>&gt;\n
+				<code>/sticker make </code>&lt;<i>con_id</i>&gt;\n
+				<code>/sticker start </code>&lt;<i>con_id</i>&gt;\n
+				<code>/sticker delete </code>&lt;<i>con_id</i>&gt;\n\n
 			`, {parse_mode: "HTML"}
 		);
 	} else {
 		hwangBot.sendMessage(msg.chat.id,
 			`
 				<b>📝 스티커 명령어 목록:</b>\n
-				<code>/sticker queue</code> - 제작 대기 목록\n
-				<code>/sticker list </code> - 완성 스티커팩 목록\n
-				<code>/sticker make </code>\<con_id\> - 제작 대기\n
-				<code>/sticker start </code>\<con_id\> - 제작 시작\n\n
+				<code>/sticker queue</code> - 대기 목록\n
+				<code>/sticker list </code>&lt;<i>page?</i>&gt; - 완성 목록\n
+				<code>/sticker make </code>&lt;<i>con_id</i>&gt; - 제작 요청\n
+				<code>/sticker start </code>&lt;<i>con_id</i>&gt; - 제작 시작\n\n
 			`, {parse_mode: "HTML"}
 		);
 	}
