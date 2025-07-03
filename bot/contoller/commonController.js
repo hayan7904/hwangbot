@@ -14,7 +14,7 @@ hwangBot.on('message', async (msg) => {
 	const chatId = msg.chat.id;
 	const messageId = msg.message_id;
 
-	logger.info(`COMMON | Bird Detected < ${msg.chat.id} | ${msg.message_id} | ${msg.from.first_name}`);
+	logger.info(`COMMON | Bird detected < ${msg.chat.id} | ${msg.message_id} | ${msg.from.first_name}`);
 
 	const NO_BIRD_MESSAGE = getNoBirdMessage();
 	const NO_BIRD_COUNT = getNoBirdCount();

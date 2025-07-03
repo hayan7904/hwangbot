@@ -22,7 +22,7 @@ const selectPackageByConIdStmt = db.prepare(`SELECT * FROM package WHERE con_id=
 const insertPackageStmt = db.prepare(`INSERT INTO package (con_id, con_title, pack_name) VALUES (?, ?, ?)`);
 const deletePackageByConIdStmt = db.prepare(`DELETE FROM package WHERE con_id=?`)
 
-const pageSize = process.env.PACKAGE_PAGE_SIZE;
+const pageSize = parseInt(process.env.PACKAGE_PAGE_SIZE) || 10;
 
 const getPackage = (page = 1) => selectAllPackageStmt.all(pageSize, (page - 1) * pageSize);
 const getPackageCount = () => selectAllPackageCountStmt.get().total;
