@@ -3,7 +3,7 @@ const OpenAIApi = require('openai');
 const openAI = new OpenAIApi({
     apiKey: process.env.OPENAI_KEY
 });
-const logger = require('@logger/logger')
+const { logger } = require('@logger/logger.js')
 
 const callGptYoutube = async (msg) => {
 	try {

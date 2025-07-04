@@ -1,5 +1,5 @@
 const axios = require('axios');
-const logger = require('@logger/logger');
+const { logger } = require('@logger/logger.js');
 
 const getYoutubeId = (url) => {
     let id = null;
