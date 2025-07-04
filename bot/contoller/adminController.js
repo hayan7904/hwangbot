@@ -1,14 +1,14 @@
 require('dotenv').config();
-const { hwangBot } = require('@/init.js');
-const { adminChatCheck } = require('@util/commonHelper.js');
-const { callGptYoutube, callGptVision } = require('@util/gptUtil.js');
-const { getYoutubeId, getYoutubeData } = require('@util/youtubeUtil.js');
+const hwangBot = require('@/init');
+const { adminChatCheck } = require('@util/commonHelper');
+const { callGptYoutube, callGptVision } = require('@util/gptUtil');
+const { getYoutubeId, getYoutubeData } = require('@util/youtubeUtil');
 const {
 	getNoBirdMessage, getNoBirdCount, getNoBirdDelay, getBlacklist,
 	setNoBirdMessage, setNoBirdCount, setNoBirdDelay,
 	insertBlacklist, deleteBlacklist,
-} = require('@util/db/commonDBUtil.js')
-const { logger } = require('@logger/logger.js');
+} = require('@util/db/commonDBUtil')
+const logger = require('@logger/logger');
 
 hwangBot.onText(/^\/status$/, (msg) => {
 	if (!adminChatCheck(msg)) return;

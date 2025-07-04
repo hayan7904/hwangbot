@@ -10,7 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath.path);
 const sharp = require('sharp');
-const { logger } = require('@logger/logger.js');
+const logger = require('@logger/logger');
 
 const mainPageUrl = 'https://dccon.dcinside.com/';
 const pkgDetailApiEndPoint = 'https://dccon.dcinside.com/index/package_detail';
@@ -22,39 +22,34 @@ const MAX_SIZE_STATIC = 512 * 1024 // 512kb
 const MAX_SIZE_VIDEO = 256 * 1024 // 256kb
 
 const workInfo = {
-    item: [],
-    state: '',
-    curr: 0,
-    max: 0,
-    start(item) {
-        this.item.push(item);
-        this.state = '🌐 데이터 가져오는 중';
-        this.curr = 0;
-        this.max = item.con_length;
-    },
-    complete(state) {
-        this.item.shift();
-        this.state = '';
-        this.curr = 0;
-        this.max = 0;
-    },
-    isWorking() {
-        return this.item.length > 0;
-    },
-    setState(state) {
-        this.state = state;
-        this.curr = 0;
-    },
-    progress() {
-        this.curr++;
-    },
-    getProgress() {
-        return {
-            item: this.item[0],
-            state: this.state,
-            curr: this.curr,
-            max: this.max
+    jobs: new Map(),
+    start(id, data) {
+        if (this.jobs.has(id)) throw new Error('Job already exist');
+
+        const job = {
+            data,
+            state: '🌐 데이터 가져오는 중',
+            curr: 0,
+            max: data.conLength
         };
+        this.jobs.set(id) = job;
+    },
+    complete(id) {
+        if (!this.jobs.delete(id)) throw new Error('Job does not exist');
+    },
+    isWorking(id) {
+        return this.jobs.has(id);
+    },
+    setState(id, state) {
+        const job = this.jobs.get(id);
+        job.state = state;
+        job.curr = 0;
+    },
+    progress(id) {
+        this.jobs.get(id).curr++;
+    },
+    getProgress(id) {
+        return this.jobs.get(id);
     }
 }
 
