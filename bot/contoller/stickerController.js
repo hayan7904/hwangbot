@@ -1,14 +1,14 @@
 require('dotenv').config();
 const fs = require('fs');
 const crypto = require('crypto');
-const { hwangBot } = require('@/init.js');
-const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper.js');
-const { workInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper.js');
-const { getBlacklistFlag } = require('@util/db/commonDBUtil.js');
+const hwangBot = require('@/init');
+const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper');
+const { workInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper');
+const { getBlacklistFlag } = require('@util/db/commonDBUtil');
 const { getQueue, getQueueItemById, getQueueItemByConId, insertQueueItem, deleteAllQueue, deleteQueueItem,
         getPackage, getPackageCount, getPackageItemByConId, insertPackageItem, deletePackageItem,
-} = require('@util/db/stickerDBUtil.js');
-const { logger } = require('@logger/logger.js')
+} = require('@util/db/stickerDBUtil');
+const logger = require('@logger/logger')
 
 let mainStickerStream, stickerStream;
 
