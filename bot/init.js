@@ -4,6 +4,4 @@ const hwangBot = new TelegramBotApi(
     {polling: true}
 );
 
-module.exports = {
-	hwangBot
-}
+module.exports = hwangBot;
