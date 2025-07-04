@@ -1,14 +1,14 @@
 require('dotenv').config();
-const { hwangBot } = require('@/init.js');
-const { adminChatCheck } = require('@util/commonHelper.js');
-const { callGptYoutube, callGptVision } = require('@util/gptUtil.js');
-const { getYoutubeId, getYoutubeData } = require('@util/youtubeUtil.js');
+const hwangBot = require('@/init');
+const { adminChatCheck } = require('@util/commonHelper');
+const { callGptYoutube, callGptVision } = require('@util/gptUtil');
+const { getYoutubeId, getYoutubeData } = require('@util/youtubeUtil');
 const {
 	getNoBirdMessage, getNoBirdCount, getNoBirdDelay, getBlacklist,
 	setNoBirdMessage, setNoBirdCount, setNoBirdDelay,
 	insertBlacklist, deleteBlacklist,
-} = require('@util/db/commonDBUtil.js')
-const { logger } = require('@logger/logger.js');
+} = require('@util/db/commonDBUtil')
+const logger = require('@logger/logger');
 
 hwangBot.onText(/^\/status$/, (msg) => {
 	if (!adminChatCheck(msg)) return;
@@ -125,7 +125,6 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 				<code>/sticker queue clear</code>\n
 				<code>/sticker list </code>&lt;<i>page?</i>&gt;\n
 				<code>/sticker make </code>&lt;<i>con_id</i>&gt;\n
-				<code>/sticker start </code>&lt;<i>con_id</i>&gt;\n
 				<code>/sticker delete </code>&lt;<i>con_id</i>&gt;\n\n
 			`, {parse_mode: "HTML"}
 		);
@@ -136,7 +135,6 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 				<code>/sticker queue</code> - 대기 목록\n
 				<code>/sticker list </code>&lt;<i>page?</i>&gt; - 완성 목록\n
 				<code>/sticker make </code>&lt;<i>con_id</i>&gt; - 제작 요청\n
-				<code>/sticker start </code>&lt;<i>con_id</i>&gt; - 제작 시작\n\n
 			`, {parse_mode: "HTML"}
 		);
 	}

@@ -2,16 +2,18 @@ const appRoot = require('app-root-path');
 const Database = require('better-sqlite3');
 
 const db = new Database(`${appRoot}/sticker.db`);
-const selectAllStickerStmt = db.prepare(`SELECT * FROM sticker`);
+const selectAllStickerStmt = db.prepare(`SELECT * FROM sticker ORDER BY created_at ASC`);
 const selectStickerByIdStmt = db.prepare(`SELECT * FROM sticker WHERE id=?`);
 const selectStickerByConIdStmt = db.prepare(`SELECT * FROM sticker WHERE con_id=?`);
-const insertStickerStmt = db.prepare(`INSERT INTO sticker (user_id, user_name, con_id, con_title, con_length) VALUES (?, ?, ?, ?, ?)`);
+const selectStickerOldest = db.prepare(`SELECT * FROM sticker ORDER BY created_at ASC LIMIT 1`);
+const insertStickerStmt = db.prepare(`INSERT INTO sticker (chat_id, user_id, user_name, con_id, con_title, con_length) VALUES (?, ?, ?, ?, ?, ?)`);
 const deleteAllStickerStmt = db.prepare(`DELETE FROM sticker`);
 const deleteStickerByIdStmt = db.prepare(`DELETE FROM sticker WHERE id=?`);
 
 const getQueue = () => selectAllStickerStmt.all();
 const getQueueItemById = (id) => selectStickerByIdStmt.get([id]);
 const getQueueItemByConId = (cid) => selectStickerByConIdStmt.get([cid]);
+const getOldestQueueItem = () => selectStickerOldest.get();
 const insertQueueItem = (args) => insertStickerStmt.run(args);
 const deleteAllQueue = () => deleteAllStickerStmt.run();
 const deleteQueueItem = (id) => deleteStickerByIdStmt.run([id]);
@@ -34,6 +36,7 @@ module.exports = {
     getQueue,
     getQueueItemById,
     getQueueItemByConId,
+    getOldestQueueItem,
     insertQueueItem,
     deleteAllQueue,
     deleteQueueItem,

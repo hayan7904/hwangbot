@@ -10,7 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath.path);
 const sharp = require('sharp');
-const { logger } = require('@logger/logger.js');
+const logger = require('@logger/logger');
 
 const mainPageUrl = 'https://dccon.dcinside.com/';
 const pkgDetailApiEndPoint = 'https://dccon.dcinside.com/index/package_detail';
