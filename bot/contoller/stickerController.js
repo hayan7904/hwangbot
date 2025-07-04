@@ -21,7 +21,7 @@ const packageMapper = (item, idx) => {
     return `[<a href="${getLink(LINK_STICKER, item.pack_name)}"><b>${item.con_id}</b></a>] <code>${item.con_title}</code> | <code>${item.pack_name}</code>\n`;
 }
 
-hwangBot.onText(/^\/sticker[\s]+(queue|list|make|start|delete)(?:[\s]+(clear|[0-9]+))?$/, async (msg, match) => {
+hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?$/, async (msg, match) => {
     // logger.http(`chat_id: ${msg.chat.id} | user_id: ${msg.from.id} | env: ${process.env.CHAT_ID_ADMIN}`);
 
     const op = match[1] || null;
@@ -41,7 +41,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|start|delete)(?:[\s]+(clear|[0-
 
         const queue = getQueue();
 
-        let res = '<b>📌 제작 대기 목록:</b>\n\n';
+        let res = '<b>📌 제작 대기:</b>\n\n';
         if (queue.length > 0) {
             res += [ ...queue.map((item, idx) => queueMapper(item, idx)) ].join('\n');
         } else {
@@ -98,7 +98,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|start|delete)(?:[\s]+(clear|[0-
                 throw new Error(`Cannot find dccon ${cid}`)
             }
 
-            const item = [msg.from.id, msg.from.first_name, cid, conData.title, conData.imagePath.length];
+            const item = [msg.chat.id, msg.from.id, msg.from.first_name, cid, conData.title, conData.imagePath.length];
             const res = insertQueueItem(item);
 
             if (res?.changes > 0) {
@@ -117,110 +117,6 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|start|delete)(?:[\s]+(clear|[0-
             }
         } catch (err) {
             logger.error(err.stack);
-        }
-    } else if (op == 'start' && Number(arg)) {
-        if (workInfo.isWorking()) {
-            hwangBot.sendMessage(msg.chat.id, '<b>❌ 현재 다른 스티커를 제작 중입니다.</b>', {parse_mode: "HTML"});
-            return;
-        }
-
-        const cid = parseInt(arg);
-        const item = getQueueItemByConId(cid);
-
-        if (!item) {
-            hwangBot.sendMessage(msg.chat.id, '<b>❌ 존재하지 않는 ID입니다.</b>');
-            return;
-        } else if (!adminUserCheck(msg) || item.user_id != msg.from.id) {
-            hwangBot.sendMessage(msg.chat.id, '<b>❌ 본인이 요청한 스티커만 제작 가능합니다.</b>');
-            return;
-        }
-
-        hwangBot.sendMessage(msg.chat.id, 
-            `<b>⚙️ [<a href='${getLink(LINK_DCCON, item.con_id)}'>${item.con_id}</a>] <code>${item.con_title}</code> 제작 시작</b>`,
-            {parse_mode: "HTML"}
-        );
-
-        try {
-            workInfo.start(item);
-
-            const conData = await getConData(item.con_id); // cid, title, imagePath
-            logger.info(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] STAGE 1 -> Fetch Complete`);
-
-            workInfo.setState('⬇️ 이미지 다운로드 중');
-            const downloadResult = await downloadCon(conData);
-            logger.info(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] STAGE 2 -> Download Complete`);
-            
-            workInfo.setState('🔄 이미지 변환 중');
-            const convertResult = await convertCon(downloadResult);
-            logger.info(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] STAGE 3 -> Convert Complete`);
-
-            workInfo.setState('📦 스티커팩 제작 중');
-            const mainSticker = convertResult.shift();
-            const botName = await hwangBot.getMe().then(me => me.username);
-            let packName, packFullName;
-
-            let creationCheck = false;
-            for (let i = 0; i < 5; i++) {
-                packName = crypto.randomBytes(8).toString('base64url').replace(/[^a-zA-Z0-9]/g, '');
-                while (Number(packName.charAt(0))) packName = crypto.randomBytes(8).toString('base64url').replace(/[^a-zA-Z0-9]/g, '');
-                packFullName = packName + '_by_' + botName;
-
-                logger.info(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] STAGE 4 -> Packname: ${packFullName}`);
-
-                mainStickerStream = fs.createReadStream(mainSticker.filepath, { highWaterMark: 64 * 1024 });
-
-                creationCheck = await hwangBot.createNewStickerSet(
-                    process.env.CHAT_ID_ADMIN,
-                    packFullName,
-                    conData.title,
-                    mainStickerStream,
-                    '🍞'
-                );
-
-                if (creationCheck) {
-                    workInfo.progress();
-                    logger.info(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] STAGE 4 -> Stickerpack Creation Success`);
-                    break;
-                }
-
-                logger.error(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] STAGE 4 -> Stickerpack Creation Failed (${i}/5)`);
-            }
-
-            if (!creationCheck) {
-                throw new Error('Stickerpack creation failed');
-            }
-
-            for (const { filepath, ext } of convertResult) {
-                stickerStream = fs.createReadStream(filepath, { highWaterMark: 64 * 1024 });
-
-                await hwangBot.addStickerToSet(
-                    process.env.CHAT_ID_ADMIN,
-                    packFullName,
-                    stickerStream,
-                    '🍞',
-                    ext == 'webm' ? 'webm_sticker' : 'png_sticker',
-                );
-                workInfo.progress();
-            }
-
-            insertPackageItem([item.con_id, item.con_title, packFullName]);
-            deleteQueueItem(item.id);
-
-            hwangBot.sendMessage(msg.chat.id, 
-                `<b>✅ [<a href='${getLink(LINK_STICKER, packFullName)}'>${item.con_id}</a>] <code>${item.con_title}</code> 제작에 성공했습니다.</b>`,
-                {parse_mode: "HTML"}
-            );
-
-            logger.info(`ADMIN | STICKER | [${item.con_id} | ${item.con_title}] Stickerpack Creation Complete`);
-        } catch (err) {
-            hwangBot.sendMessage(msg.chat.id,
-                `<b>❌ [<a href='${getLink(LINK_DCCON, item.con_id)}'>${item.con_id}</a>] <code>${item.con_title}</code> 제작에 실패했습니다.</b>`,
-                {parse_mode: "HTML"}
-            );
-            
-            logger.error(err.stack);
-        } finally {
-            workInfo.complete();
         }
     } else if (op == 'delete' && Number(arg) && adminUserCheck(msg)) {
         const cid = parseInt(arg);
