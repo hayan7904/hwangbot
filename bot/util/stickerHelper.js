@@ -21,7 +21,7 @@ const convertPath = `${appRoot}/download/convert`;
 const MAX_SIZE_STATIC = 512 * 1024 // 512kb
 const MAX_SIZE_VIDEO = 256 * 1024 // 256kb
 
-const workInfo = {
+const jobsInfo = {
     jobs: new Map(),
     start(id, data) {
         if (this.jobs.has(id)) throw new Error('Job already exist');
@@ -30,9 +30,9 @@ const workInfo = {
             data,
             state: '🌐 데이터 가져오는 중',
             curr: 0,
-            max: data.conLength
+            max: 0,
         };
-        this.jobs.set(id) = job;
+        this.jobs.set(id, job);
     },
     complete(id) {
         if (!this.jobs.delete(id)) throw new Error('Job does not exist');
@@ -40,13 +40,16 @@ const workInfo = {
     isWorking(id) {
         return this.jobs.has(id);
     },
-    setState(id, state) {
+    setState(id, state, conLength = 0) {
         const job = this.jobs.get(id);
         job.state = state;
         job.curr = 0;
+        if (conLength) job.max = conLength;
     },
     progress(id) {
-        this.jobs.get(id).curr++;
+        const job = this.jobs.get(id);
+        job.curr++;
+        return job.curr;
     },
     getProgress(id) {
         return this.jobs.get(id);
@@ -95,13 +98,14 @@ const getConData = async (cid) => {
     };
 }
 
-const downloadCon = async (conData) => {
+const downloadCon = async (conData, jid) => {
     const downloadResult = [];
 
     if (fs.existsSync(downloadPath)) fs.rmSync(downloadPath, { recursive: true, force: true });
 
     fs.mkdirSync(convertPath, { recursive: true });
 
+    const half = Math.floor(conData.imagePath.length / 2);
     for (const img of conData.imagePath) {
         const reqHeaders = { 'Referer': mainPageUrl };
         const res = await axios.get(
@@ -125,7 +129,11 @@ const downloadCon = async (conData) => {
             filename,
             ext
         });
-        workInfo.progress();
+
+        jobsInfo.progress(jid);
+        // if (jobsInfo.progress(jid) == half) {
+
+        // }
     }
 
     return downloadResult;
@@ -168,7 +176,7 @@ const convertImageToWebp = (input, output, quality = null) => {
             .toFile(output);
 }
 
-const convertCon = async (downloadResult) => {
+const convertCon = async (downloadResult, jid) => {
     const convertResult = [];
 
     for (const { filepath, filename, ext } of downloadResult) {
@@ -206,7 +214,7 @@ const convertCon = async (downloadResult) => {
         }
 
         convertResult.push({ filepath: output, ext: newExt });
-        workInfo.progress();
+        jobsInfo.progress(jid);
 
         const outputSize = Math.floor(fs.statSync(output).size / 1024);
         const outputDuration = newExt == 'webm' ? await getWebmDuration(output) : '-';
@@ -220,7 +228,7 @@ const convertCon = async (downloadResult) => {
 module.exports = {
     LINK_DCCON,
     LINK_STICKER,
-    workInfo,
+    jobsInfo,
     getLink,
     getConData,
     downloadCon,

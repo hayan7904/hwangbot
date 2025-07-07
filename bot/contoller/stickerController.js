@@ -1,16 +1,14 @@
 require('dotenv').config();
 const hwangBot = require('@/init');
 const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper');
-const { workInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper');
+const { jobsInfo, LINK_DCCON, LINK_STICKER, getLink, getConData } = require('@util/stickerHelper');
 const { getBlacklistFlag } = require('@util/db/commonDBUtil');
-const { getQueue, getQueueItemById, getQueueItemByConId, insertQueueItem, deleteAllQueue, deleteQueueItem,
-        getPackage, getPackageCount, getPackageItemByConId, insertPackageItem, deletePackageItem,
-} = require('@util/db/stickerDBUtil');
+const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem } = require('@util/db/stickerDBUtil');
 const stickerQueue = require('@/job/queue');
 const logger = require('@logger/logger');
 
-const queueMapper = (item, idx) => {
-    return `[<a href="${getLink(LINK_DCCON, item.con_id)}"><b>${item.con_id}</b></a>] <code>${item.con_title}</code> | ${item.user_name}\n`;
+const queueMapper = (data) => {
+    return `[<a href="${getLink(LINK_DCCON, data.conId)}"><b>${data.conId}</b></a>] <code>${data.conTitle}</code> | ${data.userName}\n`;
 }
 
 const packageMapper = (item, idx) => {
@@ -27,11 +25,11 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
     if (op === 'queue') {
         if (arg && arg == 'clear' && adminUserCheck(msg)) {
-            const res = deleteAllQueue();
+            const total = await stickerQueue.getWaiting()?.length || 0;
+            if (total > 0) await stickerQueue.drain();
 
-            if (res?.changes >= 0) {
-                hwangBot.sendMessage(msg.chat.id, `<b>🗑 대기 중인 스티커 ${res.changes}개를 삭제했습니다.</b>`, {parse_mode: "HTML"});
-            }
+            hwangBot.sendMessage(msg.chat.id, `<b>🗑 대기 중인 스티커 ${total}개를 삭제했습니다.</b>`, {parse_mode: "HTML"});
+
             return;
         }
 
@@ -41,7 +39,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
             let res = '<b>📌 제작 대기:</b>\n\n';
             if (waitingQueue.length > 0) {
-                res += [ ...queue.map((item, idx) => queueMapper(item, idx)) ].join('\n');
+                res += [ ...waitingQueue.map((job) => queueMapper(job.data)) ].join('\n');
             } else {
                 res += '<i>현재 대기 중인 스티커가 없습니다.</i>\n';
             }
@@ -49,20 +47,23 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
             res += '\n<b>⚙️ 제작 중:</b>\n\n';
             if (activeQueue.length > 0) {
                 activeQueue.forEach(job => {
-                    const progress = workInfo.getProgress(job.id);
-                    const percentage = Math.floor((progress.curr / progress.max) * 100);
-                    let progressBar = '';
-                    
-                    for (let i = 0; i < percentage; i += 5) {
-                        progressBar += '■';
-                    }
-                    for (let i = 100; i > percentage; i -= 5) {
-                        progressBar += '□';
-                    }
+                    const progress = jobsInfo.getProgress(job.id);
 
                     res += `[<a href="${getLink(LINK_DCCON, progress.data.conId)}"><b>${progress.data.conId}</b></a>] <code>${progress.data.conTitle}</code> | ${progress.data.userName}\n`;
                     res += `${progress.state} ... \n`;
-                    res += `[${progressBar}] ${percentage}% (${progress.curr}/${progress.max})\n\n`;
+
+                    if (progress.max > 0) {
+                        const percentage = Math.floor((progress.curr / progress.max) * 100);
+                        let progressBar = '';
+                        
+                        for (let i = 0; i < percentage; i += 5) {
+                            progressBar += '■';
+                        }
+                        for (let i = 100; i > percentage; i -= 5) {
+                            progressBar += '□';
+                        }
+                        res += `[${progressBar}] ${percentage}% (${progress.curr}/${progress.max})\n\n`;
+                    } else res += `\n`;
                 })
             } else {
                 res += '<i>현재 제작 중인 스티커가 없습니다.</i>\n';
@@ -92,9 +93,9 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
         try {
             const queue = [ ...await stickerQueue.getActive(), ...await stickerQueue.getWaiting() ].filter((job) => job.data.conId == cid);
-            const dupCheck = [ ...queue, getPackageItemByConId(cid) ];
+            const dupCheck = getPackageItemByConId(cid) && [ ...queue ].length > 0;
 
-            if (dupCheck.length > 0) {
+            if (dupCheck) {
                 hwangBot.sendMessage(msg.chat.id, '<b>❌ 이미 제작 중이거나 제작 완료된 스티커입니다.</b>', {parse_mode: "HTML"});
                 return;
             }
@@ -140,14 +141,14 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
         if (res?.changes > 0) {
             hwangBot.sendMessage(msg.chat.id,
-                `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${ctitle}</code> 스티커팩 삭제 완료</b>`,
+                `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 완료</b>`,
                 {parse_mode: "HTML"}
             );
 
             logger.info(`ADMIN | STICKER | Package Deleted -> [${cid}] ${item.con_title} | ${item.pack_name}`);
         } else {
             hwangBot.sendMessage(msg.chat.id,
-                `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${ctitle}</code> 스티커팩 삭제 실패</b>`,
+                `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 실패</b>`,
                 {parse_mode: "HTML"}
             );
         }
