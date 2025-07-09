@@ -149,13 +149,13 @@ const getWebmDuration = (input) => {
     });
 }
 
-const convertGifToWebm = (input, output, bitrate, filters) => {
+const convertImageToWebm = (input, output, bitrate, filters, setpts = '') => {
     return new Promise((resolve, reject) => {
         ffmpeg(input)
             .outputOptions([
                 '-c:v libvpx-vp9',
                 `-b:v ${bitrate}`,
-                `-vf ${filters}`,
+                `-vf ${filters}${setpts}`,
                 '-an',
                 '-pix_fmt yuva420p',
                 '-auto-alt-ref 0',
@@ -176,31 +176,47 @@ const convertImageToWebp = (input, output, quality = null) => {
             .toFile(output);
 }
 
+const getNewExt = (input, ext) => {
+    if (ext == 'gif') return 'webm';
+
+    if (ext == 'png') {
+        const fd = fs.openSync(input, 'r');
+        const buffer = Buffer.alloc(1024);
+        fs.readSync(fd, buffer, 0, buffer.length, 0);
+        fs.closeSync(fd);
+
+        if (buffer.includes('acTL') || buffer.includes('GIF')) return 'webm';
+    }
+
+    return 'webp';
+}
+
 const convertCon = async (downloadResult, jid) => {
     const convertResult = [];
 
     for (const { filepath, filename, ext } of downloadResult) {
-        const newExt = ext == 'gif' ? 'webm' : 'webp';
+        const newExt = getNewExt(filepath, ext);
         const output = path.join(convertPath, filename + '.' + newExt);
 
         if (newExt == 'webm') {
             let filters = `scale=512:512:force_original_aspect_ratio=decrease,fps=30`;
-            await convertGifToWebm(filepath, output, '1M', filters);
+            let setpts = '';
+            await convertImageToWebm(filepath, output, '1M', filters);
 
             let duration = await getWebmDuration(output);
             const maxDuration = 3.0;
 
             while (duration > maxDuration) {
                 const speedFactor = Math.floor((maxDuration / duration) * 10) / 10;
-                filters += `,setpts=${speedFactor}*PTS`
+                setpts = `,setpts=${speedFactor}*PTS`
 
-                await convertGifToWebm(filepath, output, '1M', filters);
+                await convertImageToWebm(filepath, output, '1M', filters, setpts);
                 duration = await getWebmDuration(output);
             }
 
             let bitrate = 950;
             while (fs.statSync(output).size > MAX_SIZE_VIDEO) {
-                await convertGifToWebm(filepath, output, `${bitrate}K`, filters);
+                await convertImageToWebm(filepath, output, `${bitrate}K`, filters, setpts);
                 bitrate -= 50;
             }
         } else {
