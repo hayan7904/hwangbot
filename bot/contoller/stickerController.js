@@ -3,7 +3,7 @@ const hwangBot = require('@/init');
 const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper');
 const { jobsInfo, LINK_DCCON, LINK_STICKER, getLink, getConData } = require('@util/stickerHelper');
 const { getBlacklistFlag } = require('@util/db/commonDBUtil');
-const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem } = require('@util/db/stickerDBUtil');
+const { getPackage, getPackageCount, getPackageItemByConId, getPackageItemByConTitle, deletePackageItem } = require('@util/db/stickerDBUtil');
 const stickerQueue = require('@/job/queue');
 const logger = require('@logger/logger');
 
@@ -15,7 +15,7 @@ const packageMapper = (item, idx) => {
     return `[<a href="${getLink(LINK_STICKER, item.pack_name)}"><b>${item.con_id}</b></a>] <code>${item.con_title}</code> | <code>${item.pack_name}</code>\n`;
 }
 
-hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?$/, async (msg, match) => {
+hwangBot.onText(/^\/sticker[\s]+(queue|list|make|search|delete)(?:[\s]+(clear|\S+))?$/, async (msg, match) => {
     // logger.http(`chat_id: ${msg.chat.id} | user_id: ${msg.from.id} | env: ${process.env.CHAT_ID_ADMIN}`);
 
     const op = match[1] || null;
@@ -128,7 +128,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
             logger.error(`ADMIN | STICKER | [${cid} | ${conData.title}] Stickerpack Request Failed`);
             logger.error(err.stack);
         }
-    } else if (op == 'delete' && Number(arg) && adminUserCheck(msg)) {
+    } else if (op === 'delete' && Number(arg) && adminUserCheck(msg)) {
         const cid = parseInt(arg);
         const item = getPackageItemByConId(cid);
 
@@ -151,6 +151,21 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
                 `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 실패</b>`,
                 {parse_mode: "HTML"}
             );
+        }
+    } else if (op === 'search' && arg) {
+        const searchRes = [];
+
+        if (Number(arg)) {
+            const item = getPackageItemByConId(parseInt(arg));
+            if (item) searchRes.push(item);
+        }
+        searchRes.push(...getPackageItemByConTitle(arg));
+
+        let res = `<b>🔍 검색 결과:</b>\n\n`;
+        if (searchRes.length > 0) {
+            res += [ ...searchRes.map((item, idx) => packageMapper(item, idx))].join('\n');
+        } else {
+            res += '<i>검색 결과가 없습니다.</i>\n';
         }
     }
 });

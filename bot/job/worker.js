@@ -24,6 +24,7 @@ const worker = new Worker(
             );
 
             jobsInfo.start(job.id, job.data);
+            logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] Job Start`);
             // await sleep(60000);
 
             const conData = await getConData(conId); // cid, title, imagePath
