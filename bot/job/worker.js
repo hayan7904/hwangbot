@@ -1,104 +1,132 @@
 require('dotenv').config();
+const { Worker } = require('bullmq');
+const IORedis = require('ioredis');
 const fs = require('fs');
 const crypto = require('crypto');
 const hwangBot = require('@/init');
-const { getOldestQueueItem, deleteQueueItem, insertPackageItem } = require('@util/db/stickerDBUtil');
-const { workInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper');
-const logger = require ('@logger/logger');
+const { sleep } = require('@util/commonHelper');
+const { jobsInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper');
+const { insertPackageItem } = require('@util/db/stickerDBUtil');
+const logger = require('@logger/logger');
+const redisClient = require('@util/db/redis') ;
 
-setInterval(async () => {
-    if (workInfo.isWorking()) return;
+const worker = new Worker(
+    'stickerQueue',
+    async (job) => {
+        const { chatId, userId, userName, conId, conTitle, conLength } = job.data;
+        let mainStickerStream, stickerStream;
 
-    const job = await getOldestQueueItem();
-
-    if (!job) return;
-
-    const { id, chat_id, user_id, user_name, con_id, con_title, con_length } = job;
-
-    hwangBot.sendMessage(chat_id, 
-        `<b>⚙️ [<a href='${getLink(LINK_DCCON, con_id)}'>${con_id}</a>] <code>${con_title}</code> 제작 시작</b>`,
-        {parse_mode: "HTML"}
-    );
-    logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] Stickerpack Creation Start`);
-
-    try {
-        workInfo.start(job);
-
-        const conData = await getConData(con_id); // cid, title, imagePath
-        logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] STAGE 1 -> Fetch Complete`);
-
-        workInfo.setState('⬇️ 이미지 다운로드 중');
-        const downloadResult = await downloadCon(conData);
-        logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] STAGE 2 -> Download Complete`);
-        
-        workInfo.setState('🔄 이미지 변환 중');
-        const convertResult = await convertCon(downloadResult);
-        logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] STAGE 3 -> Convert Complete`);
-
-        workInfo.setState('📦 스티커팩 제작 중');
-        const mainSticker = convertResult.shift();
-        const botName = await hwangBot.getMe().then(me => me.username);
-        let packName, packFullName;
-
-        let creationCheck = false;
-        for (let i = 0; i < 5; i++) {
-            packName = crypto.randomBytes(8).toString('base64url').replace(/[^a-zA-Z0-9]/g, '');
-            while (!isNaN(packName.charAt(0))) packName = crypto.randomBytes(8).toString('base64url').replace(/[^a-zA-Z0-9]/g, '');
-            packFullName = packName + '_by_' + botName;
-
-            logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] STAGE 4 -> Packname: ${packFullName}`);
-
-            mainStickerStream = fs.createReadStream(mainSticker.filepath, { highWaterMark: 64 * 1024 });
-
-            creationCheck = await hwangBot.createNewStickerSet(
-                process.env.CHAT_ID_ADMIN,
-                packFullName,
-                conData.title,
-                mainStickerStream,
-                '🍞'
+        try {
+            // TODO : Make stickerpack
+            hwangBot.sendMessage(chatId, 
+                `<b>⚙️ [<a href='${getLink(LINK_DCCON, conId)}'>${conId}</a>] <code>${conTitle}</code> 제작 시작</b>`,
+                {parse_mode: "HTML"}
             );
 
-            if (creationCheck) {
-                workInfo.progress();
-                logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] STAGE 4 -> Stickerpack Creation Success`);
-                break;
+            jobsInfo.start(job.id, job.data);
+            // await sleep(60000);
+
+            const conData = await getConData(conId); // cid, title, imagePath
+            logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] STAGE 1 -> Fetch Complete`);
+
+            jobsInfo.setState(job.id, '⬇️ 이미지 다운로드 중', conLength);
+            const downloadResult = await downloadCon(conData, job.id);
+            hwangBot.sendMessage(chatId, 
+                `<b>✅ [<a href='${getLink(LINK_DCCON, conId)}'>${conId}</a>] <code>${conTitle}</code> 이미지 다운로드 완료</b>`,
+                {parse_mode: "HTML"}
+            );
+            logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] STAGE 2 -> Download Complete`);
+            
+            jobsInfo.setState(job.id, '🔄 이미지 변환 중');
+            const convertResult = await convertCon(downloadResult, job.id);
+            hwangBot.sendMessage(chatId, 
+                `<b>✅ [<a href='${getLink(LINK_DCCON, conId)}'>${conId}</a>] <code>${conTitle}</code> 이미지 변환 완료</b>`,
+                {parse_mode: "HTML"}
+            );
+            logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] STAGE 3 -> Convert Complete`);
+
+            jobsInfo.setState(job.id, '📦 스티커팩 제작 중');
+            const mainSticker = convertResult.shift();
+            const botName = await hwangBot.getMe().then(me => me.username);
+            let packName, packFullName;
+
+            let creationCheck = false;
+            for (let i = 0; i < 5; i++) {
+                packName = crypto.randomBytes(8).toString('base64url').replace(/[^a-zA-Z0-9]/g, '');
+                while (Number(packName.charAt(0))) packName = crypto.randomBytes(8).toString('base64url').replace(/[^a-zA-Z0-9]/g, '');
+                packFullName = packName + '_by_' + botName;
+
+                logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] STAGE 4 -> Packname: ${packFullName}`);
+
+                mainStickerStream = fs.createReadStream(mainSticker.filepath, { highWaterMark: 64 * 1024 });
+
+                creationCheck = await hwangBot.createNewStickerSet(
+                    process.env.CHAT_ID_ADMIN,
+                    packFullName,
+                    conData.title,
+                    mainStickerStream,
+                    '🍞'
+                );
+
+                if (creationCheck) {
+                    jobsInfo.progress(job.id);
+                    logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] STAGE 4 -> Stickerpack Creation Success`);
+                    break;
+                }
+
+                logger.error(`ADMIN | STICKER | [${conId} | ${conTitle}] STAGE 4 -> Stickerpack Creation Failed (${i}/5)`);
             }
 
-            logger.error(`ADMIN | STICKER | [${con_id} | ${con_title}] STAGE 4 -> Stickerpack Creation Failed (${i}/5)`);
+            if (!creationCheck) {
+                throw new Error('Stickerpack creation failed');
+            }
+
+            job.data.packFullName = packFullName;
+
+            for (const { filepath, ext } of convertResult) {
+                stickerStream = fs.createReadStream(filepath, { highWaterMark: 64 * 1024 });
+
+                while (true) {
+                    let registCheck = await hwangBot.addStickerToSet(
+                        process.env.CHAT_ID_ADMIN,
+                        packFullName,
+                        stickerStream,
+                        '🍞',
+                        ext == 'webm' ? 'webm_sticker' : 'png_sticker',
+                    );
+
+                    if (registCheck) break;
+                }
+                jobsInfo.progress(job.id);
+            }
+        } catch (err) {
+            throw err;
         }
+    },
+    { connection: redisClient }
+);
 
-        if (!creationCheck) {
-            throw new Error('Stickerpack creation failed');
-        }
+worker.on('completed', job => {
+    const { chatId, conId, conTitle, packFullName = '' } = job.data;
 
-        for (const { filepath, ext } of convertResult) {
-            stickerStream = fs.createReadStream(filepath, { highWaterMark: 64 * 1024 });
+    insertPackageItem([conId, conTitle, packFullName]);
+    jobsInfo.complete(job.id);
 
-            await hwangBot.addStickerToSet(
-                process.env.CHAT_ID_ADMIN,
-                packFullName,
-                stickerStream,
-                '🍞',
-                ext == 'webm' ? 'webm_sticker' : 'png_sticker',
-            );
-            workInfo.progress();
-        }
+    hwangBot.sendMessage(chatId, 
+        `<b>✅ [<a href='${getLink(LINK_STICKER, packFullName)}'>${conId}</a>] <code>${conTitle}</code> 제작 완료</b>`,
+        {parse_mode: "HTML"}
+    );
+    logger.info(`ADMIN | STICKER | [${conId} | ${conTitle}] Stickerpack Creation Complete`);
+});
 
-        insertPackageItem([con_id, con_title, packFullName]);
-        await deleteQueueItem(id);
+worker.on('failed', (job, err) => {
+    const { chatId, conId, conTitle } = job.data;
 
-        hwangBot.sendMessage(chat_id, 
-            `<b>✅ [<a href='${getLink(LINK_STICKER, packFullName)}'>${con_id}</a>] <code>${con_title}</code> 제작에 성공했습니다.</b>`,
-            {parse_mode: "HTML"}
-        );
-        logger.info(`ADMIN | STICKER | [${con_id} | ${con_title}] Stickerpack Creation Complete`);
-    } catch (err) {
-        hwangBot.sendMessage(chat_id,
-            `<b>❌ [<a href='${getLink(LINK_DCCON, con_id)}'>${con_id}</a>] <code>${con_title}</code> 제작에 실패했습니다.</b>`,
-            {parse_mode: "HTML"}
-        );
-        logger.error(err.stack);
-    } finally {
-        workInfo.complete();
-    }
-}, process.env.WORKER_INTERVAL);
+    hwangBot.sendMessage(chatId,
+        `<b>❌ [<a href='${getLink(LINK_DCCON, conId)}'>${conId}</a>] <code>${conTitle}</code> 제작 실패</b>`,
+        {parse_mode: "HTML"}
+    );
+
+    logger.error(`ADMIN | STICKER | [${conId} | ${conTitle}] Stickerpack Creation Failed`);
+    logger.error(`Job ${job.id} failed: ${err.stack}`);
+});

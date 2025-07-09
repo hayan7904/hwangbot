@@ -32,6 +32,9 @@ const getPackageItemByConId = (cid) => selectPackageByConIdStmt.get([cid]);
 const insertPackageItem = (args) => insertPackageStmt.run(args);
 const deletePackageItem = (cid) => deletePackageByConIdStmt.run([cid]);
 
+process.on('SIGINT', () => db.close());
+process.on('exit', () => db.close());
+
 module.exports = {
     getQueue,
     getQueueItemById,

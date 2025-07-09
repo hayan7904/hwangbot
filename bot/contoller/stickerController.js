@@ -1,20 +1,14 @@
 require('dotenv').config();
-const fs = require('fs');
-const crypto = require('crypto');
 const hwangBot = require('@/init');
 const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper');
-const { workInfo, LINK_DCCON, LINK_STICKER, getLink, getConData, downloadCon, convertCon } = require('@util/stickerHelper');
+const { jobsInfo, LINK_DCCON, LINK_STICKER, getLink, getConData } = require('@util/stickerHelper');
 const { getBlacklistFlag } = require('@util/db/commonDBUtil');
-const { getQueue, getQueueItemById, getQueueItemByConId, insertQueueItem, deleteAllQueue, deleteQueueItem,
-        getPackage, getPackageCount, getPackageItemByConId, insertPackageItem, deletePackageItem,
-} = require('@util/db/stickerDBUtil');
-const logger = require('@logger/logger')
+const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem } = require('@util/db/stickerDBUtil');
+const stickerQueue = require('@/job/queue');
+const logger = require('@logger/logger');
 
-let mainStickerStream, stickerStream;
-
-const queueMapper = (item, idx) => {
-    const state = (workInfo.isWorking() && workInfo.getProgress().item.con_id == item.con_id) ? '(제작 중)' : '';
-    return `[<a href="${getLink(LINK_DCCON, item.con_id)}"><b>${item.con_id}</b></a>] <code>${item.con_title}</code> | ${item.user_name} ${state}\n`;
+const queueMapper = (data) => {
+    return `[<a href="${getLink(LINK_DCCON, data.conId)}"><b>${data.conId}</b></a>] <code>${data.conTitle}</code> | ${data.userName}\n`;
 }
 
 const packageMapper = (item, idx) => {
@@ -31,42 +25,55 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
     if (op === 'queue') {
         if (arg && arg == 'clear' && adminUserCheck(msg)) {
-            const res = deleteAllQueue();
+            const total = await stickerQueue.getWaiting()?.length || 0;
+            if (total > 0) await stickerQueue.drain();
 
-            if (res?.changes >= 0) {
-                hwangBot.sendMessage(msg.chat.id, `<b>🗑 대기 중인 스티커 ${res.changes}개를 삭제했습니다.</b>`, {parse_mode: "HTML"});
-            }
+            hwangBot.sendMessage(msg.chat.id, `<b>🗑 대기 중인 스티커 ${total}개를 삭제했습니다.</b>`, {parse_mode: "HTML"});
+
             return;
         }
 
-        const queue = getQueue();
+        try {
+            const waitingQueue = await stickerQueue.getWaiting();
+            const activeQueue = await stickerQueue.getActive();
 
-        let res = '<b>📌 제작 대기:</b>\n\n';
-        if (queue.length > 0) {
-            res += [ ...queue.map((item, idx) => queueMapper(item, idx)) ].join('\n');
-        } else {
-            res += '<i>현재 대기 중인 스티커가 없습니다.</i>\n';
-        }
-
-        if (workInfo.isWorking()) {
-            const progress = workInfo.getProgress();
-            const percentage = Math.floor((progress.curr / progress.max) * 100);
-            let progressBar = '';
-            
-            for (let i = 0; i < percentage; i += 5) {
-                progressBar += '■';
-            }
-            for (let i = 100; i > percentage; i -= 5) {
-                progressBar += '□';
+            let res = '<b>📌 제작 대기:</b>\n\n';
+            if (waitingQueue.length > 0) {
+                res += [ ...waitingQueue.map((job) => queueMapper(job.data)) ].join('\n');
+            } else {
+                res += '<i>현재 대기 중인 스티커가 없습니다.</i>\n';
             }
 
             res += '\n<b>⚙️ 제작 중:</b>\n\n';
-            res += `[<a href="${getLink(LINK_DCCON, progress.item.con_id)}"><b>${progress.item.con_id}</b></a>] <code>${progress.item.con_title}</code> | ${progress.item.user_name}\n\n`;
-            res += `${progress.state} ... \n`;
-            res += `[${progressBar}] ${percentage}% (${progress.curr}/${progress.max})\n\n`;
-        }
+            if (activeQueue.length > 0) {
+                activeQueue.forEach(job => {
+                    const progress = jobsInfo.getProgress(job.id);
 
-        hwangBot.sendMessage(msg.chat.id, res, {parse_mode: "HTML"});
+                    res += `[<a href="${getLink(LINK_DCCON, progress.data.conId)}"><b>${progress.data.conId}</b></a>] <code>${progress.data.conTitle}</code> | ${progress.data.userName}\n`;
+                    res += `${progress.state} ... \n`;
+
+                    if (progress.max > 0) {
+                        const percentage = Math.floor((progress.curr / progress.max) * 100);
+                        let progressBar = '';
+                        
+                        for (let i = 0; i < percentage; i += 5) {
+                            progressBar += '■';
+                        }
+                        for (let i = 100; i > percentage; i -= 5) {
+                            progressBar += '□';
+                        }
+                        res += `[${progressBar}] ${percentage}% (${progress.curr}/${progress.max})\n\n`;
+                    } else res += `\n`;
+                })
+            } else {
+                res += '<i>현재 제작 중인 스티커가 없습니다.</i>\n';
+            }
+
+            hwangBot.sendMessage(msg.chat.id, res, {parse_mode: "HTML"});
+        } catch (err) {
+            hwangBot.sendMessage(msg.chat.id, '<b>❌ 제작 큐를 불러오는데 실패했습니다.</b>', {parse_mode: "HTML"});
+            logger.error(err.stack);
+        }
     } else if (op === 'list') {
         const pageSize = parseInt(process.env.PACKAGE_PAGE_SIZE) || 10;
         const total = Math.max(Math.ceil(getPackageCount() / pageSize), 1);
@@ -82,10 +89,12 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
         hwangBot.sendMessage(msg.chat.id, res, {parse_mode: "HTML"});
     } else if (op === 'make' && Number(arg)) {
-        try {
-            const cid = parseInt(arg);
+        const cid = parseInt(arg);
 
-            const dupCheck = getPackageItemByConId(cid) || getQueueItemByConId(cid);
+        try {
+            const queue = [ ...await stickerQueue.getActive(), ...await stickerQueue.getWaiting() ].filter((job) => job.data.conId == cid);
+            const dupCheck = getPackageItemByConId(cid) && [ ...queue ].length > 0;
+
             if (dupCheck) {
                 hwangBot.sendMessage(msg.chat.id, '<b>❌ 이미 제작 중이거나 제작 완료된 스티커입니다.</b>', {parse_mode: "HTML"});
                 return;
@@ -98,24 +107,25 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
                 throw new Error(`Cannot find dccon ${cid}`)
             }
 
-            const item = [msg.chat.id, msg.from.id, msg.from.first_name, cid, conData.title, conData.imagePath.length];
-            const res = insertQueueItem(item);
+            await stickerQueue.add('makeStickerpack', {
+                chatId: msg.chat.id,
+                userId: msg.from.id,
+                userName: msg.from.first_name,
+                conId: cid,
+                conTitle: conData.title,
+                conLength: conData.imagePath.length
+            })
 
-            if (res?.changes > 0) {
-                hwangBot.sendMessage(msg.chat.id,
-                    `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${conData.title}</code> 요청 완료</b>`,
-                    {parse_mode: "HTML"}
-                );
-
-                logger.info(`COMMON | STICKER | Queue created -> [${cid}] ${conData.title} | ${msg.from.first_name}`);
-            } else {
-                hwangBot.sendMessage(msg.chat.id,
-                    `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${conData.title}</code> 요청 실패</b>`,
-                    {parse_mode: "HTML"}
-                );
-                throw new Error(`Queue creation failed`)
-            }
+            hwangBot.sendMessage(msg.chat.id,
+                `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${conData.title}</code> 요청 완료</b>`,
+                {parse_mode: "HTML"}
+            );
         } catch (err) {
+            hwangBot.sendMessage(msg.chat.id,
+                `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${conData.title}</code> 요청 실패</b>`,
+                {parse_mode: "HTML"}
+            );
+            logger.error(`ADMIN | STICKER | [${cid} | ${conData.title}] Stickerpack Request Failed`);
             logger.error(err.stack);
         }
     } else if (op == 'delete' && Number(arg) && adminUserCheck(msg)) {

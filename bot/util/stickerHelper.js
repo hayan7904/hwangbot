@@ -21,40 +21,38 @@ const convertPath = `${appRoot}/download/convert`;
 const MAX_SIZE_STATIC = 512 * 1024 // 512kb
 const MAX_SIZE_VIDEO = 256 * 1024 // 256kb
 
-const workInfo = {
-    item: [],
-    state: '',
-    curr: 0,
-    max: 0,
-    start(item) {
-        this.item.push(item);
-        this.state = '🌐 데이터 가져오는 중';
-        this.curr = 0;
-        this.max = item.con_length;
-    },
-    complete(state) {
-        this.item.shift();
-        this.state = '';
-        this.curr = 0;
-        this.max = 0;
-    },
-    isWorking() {
-        return this.item.length > 0;
-    },
-    setState(state) {
-        this.state = state;
-        this.curr = 0;
-    },
-    progress() {
-        this.curr++;
-    },
-    getProgress() {
-        return {
-            item: this.item[0],
-            state: this.state,
-            curr: this.curr,
-            max: this.max
+const jobsInfo = {
+    jobs: new Map(),
+    start(id, data) {
+        if (this.jobs.has(id)) throw new Error('Job already exist');
+
+        const job = {
+            data,
+            state: '🌐 데이터 가져오는 중',
+            curr: 0,
+            max: 0,
         };
+        this.jobs.set(id, job);
+    },
+    complete(id) {
+        if (!this.jobs.delete(id)) throw new Error('Job does not exist');
+    },
+    isWorking(id) {
+        return this.jobs.has(id);
+    },
+    setState(id, state, conLength = 0) {
+        const job = this.jobs.get(id);
+        job.state = state;
+        job.curr = 0;
+        if (conLength) job.max = conLength;
+    },
+    progress(id) {
+        const job = this.jobs.get(id);
+        job.curr++;
+        return job.curr;
+    },
+    getProgress(id) {
+        return this.jobs.get(id);
     }
 }
 
@@ -100,13 +98,14 @@ const getConData = async (cid) => {
     };
 }
 
-const downloadCon = async (conData) => {
+const downloadCon = async (conData, jid) => {
     const downloadResult = [];
 
     if (fs.existsSync(downloadPath)) fs.rmSync(downloadPath, { recursive: true, force: true });
 
     fs.mkdirSync(convertPath, { recursive: true });
 
+    const half = Math.floor(conData.imagePath.length / 2);
     for (const img of conData.imagePath) {
         const reqHeaders = { 'Referer': mainPageUrl };
         const res = await axios.get(
@@ -130,7 +129,11 @@ const downloadCon = async (conData) => {
             filename,
             ext
         });
-        workInfo.progress();
+
+        jobsInfo.progress(jid);
+        // if (jobsInfo.progress(jid) == half) {
+
+        // }
     }
 
     return downloadResult;
@@ -188,7 +191,7 @@ const getNewExt = (input, ext) => {
     return 'webp';
 }
 
-const convertCon = async (downloadResult) => {
+const convertCon = async (downloadResult, jid) => {
     const convertResult = [];
 
     for (const { filepath, filename, ext } of downloadResult) {
@@ -227,7 +230,7 @@ const convertCon = async (downloadResult) => {
         }
 
         convertResult.push({ filepath: output, ext: newExt });
-        workInfo.progress();
+        jobsInfo.progress(jid);
 
         const outputSize = Math.floor(fs.statSync(output).size / 1024);
         const outputDuration = newExt == 'webm' ? await getWebmDuration(output) : '-';
@@ -241,7 +244,7 @@ const convertCon = async (downloadResult) => {
 module.exports = {
     LINK_DCCON,
     LINK_STICKER,
-    workInfo,
+    jobsInfo,
     getLink,
     getConData,
     downloadCon,
