@@ -131,14 +131,14 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
         if (res?.changes > 0) {
             hwangBot.sendMessage(msg.chat.id,
-                `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${ctitle}</code> 스티커팩 삭제 완료</b>`,
+                `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 완료</b>`,
                 {parse_mode: "HTML"}
             );
 
             logger.info(`ADMIN | STICKER | Package Deleted -> [${cid}] ${item.con_title} | ${item.pack_name}`);
         } else {
             hwangBot.sendMessage(msg.chat.id,
-                `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${ctitle}</code> 스티커팩 삭제 실패</b>`,
+                `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 실패</b>`,
                 {parse_mode: "HTML"}
             );
         }
