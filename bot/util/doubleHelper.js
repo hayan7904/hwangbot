@@ -58,7 +58,7 @@ const mergeWebp = async (data) => {
         { input: data[0], top: 0, left: 0 },
         { input: data[1], top: 0, left: metadata.width },
     ])
-    .webp()
+    .jpeg()
     .toBuffer();
 
     return merged;

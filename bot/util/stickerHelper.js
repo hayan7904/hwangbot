@@ -206,23 +206,23 @@ const convertCon = async (downloadResult, jid) => {
             const maxDuration = 3.0;
             let duration = await getWebmDuration(output);
             let speedFactor = Math.floor((maxDuration / duration) * 100) * 0.01;
-            // logger.info(`duration: ${duration}`);
 
             while (duration > maxDuration) {
                 setpts = `,setpts=${speedFactor}*PTS`
-                // logger.info(`duration: ${duration} | speedFactor: ${speedFactor}`);
+                logger.info(`${filename}.${newExt} - duration: ${duration} | speedFactor: ${speedFactor}`);
 
                 await convertImageToWebm(filepath, output, '1M', filters, setpts);
                 duration = await getWebmDuration(output);
                 speedFactor *= Math.floor((maxDuration / duration) * 100) * 0.01;
             }
+            logger.info(`${filename}.${newExt} - result duration: ${duration}`);
 
-            let bitrate = Math.floor((MAX_SIZE_VIDEO / fs.statSync(output).size) * 1000);
-            // logger.info(`size: ${fs.statSync(output).size / 1024}KB`);
+            let bitrate = Math.floor(((255 * 1024) / fs.statSync(output).size) * 1000);
+            logger.info(`${filename}.${newExt} - size: ${fs.statSync(output).size / 1024}KB`);
             while (fs.statSync(output).size > MAX_SIZE_VIDEO) {
                 await convertImageToWebm(filepath, output, `${bitrate}K`, filters, setpts);
-                // logger.info(`size: ${fs.statSync(output).size / 1024}KB | bitrate: ${bitrate}K`);
-                bitrate -= 50;
+                logger.info(`${filename}.${newExt} - size: ${fs.statSync(output).size / 1024}KB | bitrate: ${bitrate}K`);
+                bitrate -= 25;
             }
         } else {
             await convertImageToWebp(filepath, output);
@@ -240,7 +240,7 @@ const convertCon = async (downloadResult, jid) => {
         const outputSize = Math.floor(fs.statSync(output).size / 1024);
         const outputDuration = newExt == 'webm' ? await getWebmDuration(output) : '-';
 
-        logger.info(`ADMIN | STICKER | ${filename}.${newExt} Converted -> Size: ${outputSize}KB | Duration: ${outputDuration}`);
+        logger.info(`ADMIN | STICKER | ${filename}.${newExt} | Converted -> Size: ${outputSize}KB | Duration: ${outputDuration}`);
     }
 
     return convertResult;
