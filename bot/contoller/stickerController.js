@@ -25,7 +25,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
     if (op === 'queue') {
         if (arg && arg == 'clear' && adminUserCheck(msg)) {
-            const total = await stickerQueue.getWaiting()?.length || 0;
+            const total = await stickerQueue.getWaiting().then(res => res.length) || 0;
             if (total > 0) await stickerQueue.drain();
 
             hwangBot.sendMessage(msg.chat.id, `<b>🗑 대기 중인 스티커 ${total}개를 삭제했습니다.</b>`, {parse_mode: "HTML"});
@@ -93,7 +93,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
         try {
             const queue = [ ...await stickerQueue.getActive(), ...await stickerQueue.getWaiting() ].filter((job) => job.data.conId == cid);
-            const dupCheck = getPackageItemByConId(cid) && [ ...queue ].length > 0;
+            const dupCheck = getPackageItemByConId(cid) || [ ...queue ].length > 0;
 
             if (dupCheck) {
                 hwangBot.sendMessage(msg.chat.id, '<b>❌ 이미 제작 중이거나 제작 완료된 스티커입니다.</b>', {parse_mode: "HTML"});

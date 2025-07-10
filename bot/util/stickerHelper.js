@@ -206,12 +206,14 @@ const convertCon = async (downloadResult, jid) => {
             let duration = await getWebmDuration(output);
             const maxDuration = 3.0;
 
+            let speedFactor = Math.floor((maxDuration / duration) * 100) * 0.01;
             while (duration > maxDuration) {
-                const speedFactor = Math.floor((maxDuration / duration) * 10) / 10;
                 setpts = `,setpts=${speedFactor}*PTS`
+                console.log(`duration: ${duration} | speedFactor: ${speedFactor}`);
 
                 await convertImageToWebm(filepath, output, '1M', filters, setpts);
                 duration = await getWebmDuration(output);
+                speedFactor *= Math.floor((maxDuration / duration) * 100) * 0.01;
             }
 
             let bitrate = 950;
