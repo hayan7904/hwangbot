@@ -6,14 +6,12 @@ const { doubleInfo, makeDoubleCon } = require('@/util/doubleHelper');
 const logger = require('@logger/logger');
 
 hwangBot.onText(/^\/double$/, (msg) => {
-    if (!adminChatCheck(msg)) return;
-
     hwangBot.sendMessage(msg.chat.id, '<b>🖼 더블콘으로 만들 스티커 2개를 순서대로 보내주세요.</b>', {parse_mode: "HTML"});
     doubleInfo.start(msg.from.id);
 });
 
 hwangBot.onText(/^\/cancel$/, (msg) => {
-    if (!adminChatCheck(msg)) return;
+    if (!doubleInfo.isWorking(msg.from.id)) return;
 
     hwangBot.sendMessage(msg.chat.id, '<b>❎ 더블콘 제작이 취소되었습니다.</b>', {parse_mode: "HTML"});
     doubleInfo.complete(msg.from.id);
@@ -36,35 +34,38 @@ hwangBot.on('message', async (msg) => {
 
         doubleInfo.add(userId, uniqueId, file.file_path);
         hwangBot.sendMessage(msg.chat.id, '<b>✅ 더블콘 요청 완료</b>', {parse_mode: "HTML"});
+        logger.info(`ADMIN | DOUBLECON | ${uniqueId} | Sticker Added`);
 
         if (doubleInfo.isReady(userId)) {
+            const job = doubleInfo.get(userId);
+
             hwangBot.sendMessage(msg.chat.id, '<b>⚙ 더블콘 제작 시작</b>', {parse_mode: "HTML"});
+            logger.info(`ADMIN | DOUBLECON | ${job.uniqueId[0]} & ${job.uniqueId[1]} | Doublecon Creation Start`);
 
             try {
-                const res = await makeDoubleCon(userId);
-                const job = doubleInfo.get(userId);
+                const { res, ext } = await makeDoubleCon(userId);
+                const conTitle = await hwangBot.getStickerSet(msg.sticker.set_name).then(res => res.title);
 
-                if (res && insertDoubleItem([job.uniqueId[0], job.uniqueId[1], res]).changes > 0) {
-                    hwangBot.sendSticker(msg.chat.id, res);
+                if (res && insertDoubleItem([conTitle, job.uniqueId[0], job.uniqueId[1], res, ext]).changes > 0) {
+                    if (ext == 'webp') hwangBot.sendSticker(msg.chat.id, res);
+                    else hwangBot.sendAnimation(msg.chat.id, res);
                     logger.info(`ADMIN | DOUBLECON | ${job.uniqueId[0]} & ${job.uniqueId[1]} | Doublecon Creation Success`);
                 } else {
                     throw new Error('Error while making doublecon');
                 }
             } catch (err) {
                 hwangBot.sendMessage(msg.chat.id, '<b>❌ 더블콘 제작 실패</b>', {parse_mode: "HTML"});
+                logger.error('Doublecon Creation Error');
                 logger.error(err.stack);
             } finally {
                 doubleInfo.complete(msg.from.id);
             }
-        } else {
-            logger.info(`ADMIN | DOUBLECON | ${uniqueId} | Sticker Added`);
         }
     } else if (getDoubleCount(uniqueId) > 0) {
-        const image = getDoubleImageByUniqueId(uniqueId);
+        const { image, ext } = getDoubleImageByUniqueId(uniqueId);
 
-        hwangBot.deleteMessage(msg.chat.id, msg.message_id)
-            .then(res => {
-                hwangBot.sendSticker(msg.chat.id, image);
-            });
+        await hwangBot.deleteMessage(msg.chat.id, msg.message_id)
+        if (ext == 'webp') hwangBot.sendSticker(msg.chat.id, image);
+        else hwangBot.sendAnimation(msg.chat.id, image);
     }
 });
