@@ -22,7 +22,7 @@ hwangBot.on('message', async (msg) => {
 
     const uniqueId = msg.sticker.file_unique_id;
 
-    if (adminChatCheck(msg) && doubleInfo.isWorking(msg.from.id)) {
+    if (doubleInfo.isWorking(msg.from.id)) {
         if (getDoubleCount(uniqueId) > 0) {
             hwangBot.sendMessage(msg.chat.id, '<b>❌ 이미 더블콘이 존재합니다.</b>', {parse_mode: "HTML"});
             return;
@@ -46,7 +46,7 @@ hwangBot.on('message', async (msg) => {
                 const { res, ext } = await makeDoubleCon(userId);
                 const conTitle = await hwangBot.getStickerSet(msg.sticker.set_name).then(res => res.title);
 
-                if (res && insertDoubleItem([conTitle, job.uniqueId[0], job.uniqueId[1], res, ext]).changes > 0) {
+                if (res && insertDoubleItem([job.uniqueId[0], job.uniqueId[1], conTitle, res, ext]).changes > 0) {
                     if (ext == 'webp') hwangBot.sendSticker(msg.chat.id, res);
                     else hwangBot.sendAnimation(msg.chat.id, res);
                     logger.info(`ADMIN | DOUBLECON | ${job.uniqueId[0]} & ${job.uniqueId[1]} | Doublecon Creation Success`);

@@ -143,25 +143,25 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 
 hwangBot.setMyCommands(
 	[
-		{ command: "/status", description: "bot status" },
-		{ command: "/test", description: "/test youtube_id" },
-		{ command: "/msg", description: "/msg (?:\"string\")" },
-		{ command: "/count", description: "/count (?:number)" },
-		{ command: "/delay", description: "/delay (?:number)" },
-		{ command: "/black", description: "/black (?:(add|del) number)" },
-		{ command: "/sticker", description: "list sticker commands" },
-		{ command: "/double", description: "make double con" },
-		{ command: "/cancel", description: "cancel make double con" },
+		{ command: "status", description: "bot status" },
+		{ command: "sticker", description: "list sticker commands" },
+		{ command: "double", description: "make double con" },
+		{ command: "cancel", description: "cancel make double con" },
 	], 
-	{ scope: { type: "chat", chat_id: process.env.CHAT_ID_ADMIN} }
+	{ scope: { type: "default" } }
 );
 
 hwangBot.setMyCommands(
 	[
-		{ command: "/status", description: "bot status" },
-		{ command: "/sticker", description: "list sticker commands" },
-		{ command: "/double", description: "make double con" },
-		{ command: "/cancel", description: "cancel make double con" },
+		{ command: "status", description: "bot status" },
+		{ command: "test", description: "/test youtube_id" },
+		{ command: "msg", description: "/msg (?:\"string\")" },
+		{ command: "count", description: "/count (?:number)" },
+		{ command: "delay", description: "/delay (?:number)" },
+		{ command: "black", description: "/black (?:(add|del) number)" },
+		{ command: "sticker", description: "list sticker commands" },
+		{ command: "double", description: "make double con" },
+		{ command: "cancel", description: "cancel make double con" },
 	], 
-	{ scope: { type: "default" } }
+	{ scope: { type: "chat", chat_id: process.env.CHAT_ID_ADMIN} }
 );
