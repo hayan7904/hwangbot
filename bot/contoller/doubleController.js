@@ -1,7 +1,7 @@
 require('dotenv').config();
 const hwangBot = require('@/init');
 const { adminChatCheck } = require('@/util/commonHelper');
-const { getDoubleCount, insertDoubleItem, getDoubleImageByUniqueId } = require('@/util/db/stickerDBUtil');
+const { getDoubleCount, insertDoubleItem, getDoubleImageByUniqueId, getPackageItemByPackName } = require('@/util/db/stickerDBUtil');
 const { doubleInfo, makeDoubleCon } = require('@/util/doubleHelper');
 const logger = require('@logger/logger');
 
@@ -46,7 +46,7 @@ hwangBot.on('message', async (msg) => {
                 const { res, ext } = await makeDoubleCon(userId);
                 const conTitle = await hwangBot.getStickerSet(msg.sticker.set_name).then(res => res.title);
 
-                if (res && insertDoubleItem([job.uniqueId[0], job.uniqueId[1], conTitle, res, ext]).changes > 0) {
+                if (res && insertDoubleItem([job.uniqueId[0], job.uniqueId[1], conTitle, msg.sticker.set_name, res, ext]).changes > 0) {
                     if (ext == 'webp') hwangBot.sendSticker(msg.chat.id, res);
                     else hwangBot.sendAnimation(msg.chat.id, res);
                     logger.info(`ADMIN | DOUBLECON | ${job.uniqueId[0]} & ${job.uniqueId[1]} | Doublecon Creation Success`);

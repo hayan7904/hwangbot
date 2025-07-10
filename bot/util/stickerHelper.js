@@ -203,22 +203,25 @@ const convertCon = async (downloadResult, jid) => {
             let setpts = '';
             await convertImageToWebm(filepath, output, '1M', filters);
 
-            let duration = await getWebmDuration(output);
             const maxDuration = 3.0;
-
+            let duration = await getWebmDuration(output);
             let speedFactor = Math.floor((maxDuration / duration) * 100) * 0.01;
+            // logger.info(`duration: ${duration}`);
+
             while (duration > maxDuration) {
                 setpts = `,setpts=${speedFactor}*PTS`
-                console.log(`duration: ${duration} | speedFactor: ${speedFactor}`);
+                // logger.info(`duration: ${duration} | speedFactor: ${speedFactor}`);
 
                 await convertImageToWebm(filepath, output, '1M', filters, setpts);
                 duration = await getWebmDuration(output);
                 speedFactor *= Math.floor((maxDuration / duration) * 100) * 0.01;
             }
 
-            let bitrate = 950;
+            let bitrate = Math.floor((MAX_SIZE_VIDEO / fs.statSync(output).size) * 1000);
+            // logger.info(`size: ${fs.statSync(output).size / 1024}KB`);
             while (fs.statSync(output).size > MAX_SIZE_VIDEO) {
                 await convertImageToWebm(filepath, output, `${bitrate}K`, filters, setpts);
+                // logger.info(`size: ${fs.statSync(output).size / 1024}KB | bitrate: ${bitrate}K`);
                 bitrate -= 50;
             }
         } else {

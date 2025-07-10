@@ -3,7 +3,7 @@ const hwangBot = require('@/init');
 const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper');
 const { jobsInfo, LINK_DCCON, LINK_STICKER, getLink, getConData } = require('@util/stickerHelper');
 const { getBlacklistFlag } = require('@util/db/commonDBUtil');
-const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem } = require('@util/db/stickerDBUtil');
+const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem, deleteDoubleItem } = require('@util/db/stickerDBUtil');
 const stickerQueue = require('@/job/queue');
 const logger = require('@logger/logger');
 
@@ -140,6 +140,8 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
         const res = deletePackageItem(cid);
 
         if (res?.changes > 0) {
+            deleteDoubleItemByPackName(item.pack_name);
+
             hwangBot.sendMessage(msg.chat.id,
                 `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 완료</b>`,
                 {parse_mode: "HTML"}
