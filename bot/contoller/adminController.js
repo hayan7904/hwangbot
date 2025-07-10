@@ -149,6 +149,8 @@ hwangBot.setMyCommands(
 		{ command: "/delay", description: "/delay (?:number)" },
 		{ command: "/black", description: "/black (?:(add|del) number)" },
 		{ command: "/sticker", description: "list sticker commands" },
+		{ command: "/double", description: "make double con" },
+		{ command: "/cancel", description: "cancel make double con" },
 	], 
 	{ scope: { type: "chat", chat_id: process.env.CHAT_ID_ADMIN} }
 );

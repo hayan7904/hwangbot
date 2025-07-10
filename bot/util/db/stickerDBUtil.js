@@ -32,6 +32,14 @@ const getPackageItemByConId = (cid) => selectPackageByConIdStmt.get([cid]);
 const insertPackageItem = (args) => insertPackageStmt.run(args);
 const deletePackageItem = (cid) => deletePackageByConIdStmt.run([cid]);
 
+const insertDoubleStmt = db.prepare(`INSERT INTO double (unique_id_1, unique_id_2, image) VALUES (?, ?, ?)`);
+const selectDoubleCountByUniqueIdStmt = db.prepare(`SELECT COUNT(*) AS total FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+const selectDoubleByUniqueIdStmt = db.prepare(`SELECT image FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+
+const insertDoubleItem = (args) => insertDoubleStmt.run(args);
+const getDoubleCount = (uid) => selectDoubleCountByUniqueIdStmt.get({ uniqueId: uid }).total;
+const getDoubleImageByUniqueId = (uid) => selectDoubleByUniqueIdStmt.get({ uniqueId: uid }).image;
+
 process.on('SIGINT', () => db.close());
 process.on('exit', () => db.close());
 
@@ -43,9 +51,14 @@ module.exports = {
     insertQueueItem,
     deleteAllQueue,
     deleteQueueItem,
+
     getPackage,
     getPackageCount,
     getPackageItemByConId,
     insertPackageItem,
-    deletePackageItem
+    deletePackageItem,
+
+    insertDoubleItem,
+    getDoubleCount,
+    getDoubleImageByUniqueId,
 }
