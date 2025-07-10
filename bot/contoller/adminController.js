@@ -10,9 +10,7 @@ const {
 } = require('@util/db/commonDBUtil')
 const logger = require('@logger/logger');
 
-hwangBot.onText(/^\/status$/, (msg) => {
-	if (!adminChatCheck(msg)) return;
-	
+hwangBot.onText(/^\/status(?:@hwangbot_bot)?$/, (msg) => {
 	hwangBot.sendMessage(msg.chat.id, '<b>✔ Healthy</b>', {parse_mode: "HTML"});
 })
 
@@ -116,7 +114,7 @@ hwangBot.onText(/^\/black(?:\s+(add|del)\s+(\d+))?$/, (msg, match) => {
 	}
 });
 
-hwangBot.onText(/^\/sticker$/, (msg) => {
+hwangBot.onText(/^\/sticker(?:@hwangbot_bot)?$/, (msg) => {
     if (adminChatCheck(msg)) {
 		hwangBot.sendMessage(msg.chat.id,
 			`

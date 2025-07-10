@@ -5,12 +5,12 @@ const { getDoubleCount, insertDoubleItem, getDoubleImageByUniqueId } = require('
 const { doubleInfo, makeDoubleCon } = require('@/util/doubleHelper');
 const logger = require('@logger/logger');
 
-hwangBot.onText(/^\/double$/, (msg) => {
+hwangBot.onText(/^\/double(?:@hwangbot_bot)?$/, (msg) => {
     hwangBot.sendMessage(msg.chat.id, '<b>🖼 더블콘으로 만들 스티커 2개를 순서대로 보내주세요.</b>', {parse_mode: "HTML"});
     doubleInfo.start(msg.from.id);
 });
 
-hwangBot.onText(/^\/cancel$/, (msg) => {
+hwangBot.onText(/^\/cancel(?:@hwangbot_bot)?$/, (msg) => {
     if (!doubleInfo.isWorking(msg.from.id)) return;
 
     hwangBot.sendMessage(msg.chat.id, '<b>❎ 더블콘 제작이 취소되었습니다.</b>', {parse_mode: "HTML"});
