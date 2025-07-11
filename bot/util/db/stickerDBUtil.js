@@ -36,12 +36,14 @@ const deletePackageItem = (cid) => deletePackageByConIdStmt.run([cid]);
 
 const insertDoubleStmt = db.prepare(`INSERT INTO double (unique_id_1, unique_id_2, con_title, pack_name, image, ext) VALUES (?, ?, ?, ?, ?, ?)`);
 const selectDoubleCountByUniqueIdStmt = db.prepare(`SELECT COUNT(*) AS total FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
-const selectDoubleByUniqueIdStmt = db.prepare(`SELECT image, ext FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+const selectDoubleByUniqueIdStmt = db.prepare(`SELECT * FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+const deleteDoubleByUniqueIdStmt = db.prepare(`DELETE FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
 const deleteDoubleByPackNameStmt = db.prepare(`DELETE FROM double WHERE pack_name=?`)
 
 const insertDoubleItem = (args) => insertDoubleStmt.run(args);
 const getDoubleCount = (uid) => selectDoubleCountByUniqueIdStmt.get({ uniqueId: uid }).total;
 const getDoubleImageByUniqueId = (uid) => selectDoubleByUniqueIdStmt.get({ uniqueId: uid });
+const deleteDoubleItemByUniqueId = (uid) => deleteDoubleByUniqueIdStmt.run({ uniqueId: uid });
 const deleteDoubleItemByPackName = (pname) => deleteDoubleByPackNameStmt.run([pname]);
 
 process.on('SIGINT', () => db.close());
@@ -66,5 +68,6 @@ module.exports = {
     insertDoubleItem,
     getDoubleCount,
     getDoubleImageByUniqueId,
+    deleteDoubleItemByUniqueId,
     deleteDoubleItemByPackName,
 }

@@ -13,9 +13,9 @@ const logger = require('@logger/logger');
 
 const doubleInfo = {
     jobs: new Map(),
-    start(id) {
+    start(id, type) {
         if (this.isWorking(id)) this.complete(id);
-        this.jobs.set(id, { uniqueId: [], filePath: [] });
+        this.jobs.set(id, { type, uniqueId: [], filePath: [] });
     },
     add(id, uid, path) {
         if (!this.jobs.has(id)) return;
@@ -29,7 +29,13 @@ const doubleInfo = {
         return this.jobs.has(id);
     },
     isReady(id) {
-        return this.get(id)?.uniqueId.length == 2;
+        return this.get(id)?.uniqueId.length < 2;
+    },
+    isTypeOf(id, type) {
+        return this.get(id)?.type == type;
+    },
+    continue(id) {
+        this.get(id)?.uniqueId = [];
     },
     complete(id) {
         this.jobs.delete(id);
