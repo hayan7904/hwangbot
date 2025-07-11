@@ -35,7 +35,7 @@ const doubleInfo = {
         return this.get(id)?.type == type;
     },
     continue(id) {
-        this.get(id)?.uniqueId = [];
+        if (this.isWorking(id)) this.get(id).uniqueId = [];
     },
     complete(id) {
         this.jobs.delete(id);
@@ -64,7 +64,7 @@ const mergeWebp = async (data) => {
         { input: data[0], top: 0, left: 0 },
         { input: data[1], top: 0, left: metadata.width },
     ])
-    .jpeg()
+    .png()
     .toBuffer();
 
     return merged;
