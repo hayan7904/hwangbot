@@ -29,7 +29,7 @@ const doubleInfo = {
         return this.jobs.has(id);
     },
     isReady(id) {
-        return this.get(id)?.uniqueId.length < 2;
+        return this.get(id)?.uniqueId.length >= 2;
     },
     isTypeOf(id, type) {
         return this.get(id)?.type == type;

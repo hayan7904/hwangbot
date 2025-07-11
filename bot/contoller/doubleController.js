@@ -28,6 +28,7 @@ hwangBot.on('message', async (msg) => {
     if (!msg.sticker) return;
 
     const uniqueId = msg.sticker.file_unique_id;
+    const userId = msg.from.id;
 
     if (doubleInfo.isWorking(msg.from.id)) {
         if (doubleInfo.isTypeOf(msg.from.id, 'make') && !doubleInfo.isReady(userId)) {
@@ -36,7 +37,6 @@ hwangBot.on('message', async (msg) => {
                 return;
             }
     
-            const userId = msg.from.id;
             const fileId = msg.sticker.file_id;
             const file = await hwangBot.getFile(fileId);
     
