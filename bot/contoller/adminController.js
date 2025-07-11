@@ -10,9 +10,7 @@ const {
 } = require('@util/db/commonDBUtil')
 const logger = require('@logger/logger');
 
-hwangBot.onText(/^\/status$/, (msg) => {
-	if (!adminChatCheck(msg)) return;
-	
+hwangBot.onText(/^\/status(?:@hwangbot_bot)?$/, (msg) => {
 	hwangBot.sendMessage(msg.chat.id, '<b>✔ Healthy</b>', {parse_mode: "HTML"});
 })
 
@@ -116,7 +114,7 @@ hwangBot.onText(/^\/black(?:\s+(add|del)\s+(\d+))?$/, (msg, match) => {
 	}
 });
 
-hwangBot.onText(/^\/sticker$/, (msg) => {
+hwangBot.onText(/^\/sticker(?:@hwangbot_bot)?$/, (msg) => {
     if (adminChatCheck(msg)) {
 		hwangBot.sendMessage(msg.chat.id,
 			`
@@ -134,7 +132,8 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 				<b>📝 스티커 명령어 목록:</b>\n
 				<code>/sticker queue</code> - 대기 목록\n
 				<code>/sticker list </code>&lt;<i>page?</i>&gt; - 완성 목록\n
-				<code>/sticker make </code>&lt;<i>con_id</i>&gt; - 제작 요청\n\n
+				<code>/sticker make </code>&lt;<i>con_id</i>&gt; - 제작 요청\n
+				<code>/double</code> - 더블콘 제작 요청\n
 			`, {parse_mode: "HTML"}
 		);
 	}
@@ -142,13 +141,25 @@ hwangBot.onText(/^\/sticker$/, (msg) => {
 
 hwangBot.setMyCommands(
 	[
-		{ command: "/status", description: "bot status" },
-		{ command: "/test", description: "/test youtube_id" },
-		{ command: "/msg", description: "/msg (?:\"string\")" },
-		{ command: "/count", description: "/count (?:number)" },
-		{ command: "/delay", description: "/delay (?:number)" },
-		{ command: "/black", description: "/black (?:(add|del) number)" },
-		{ command: "/sticker", description: "list sticker commands" },
+		{ command: "status", description: "bot status" },
+		{ command: "sticker", description: "list sticker commands" },
+		{ command: "double", description: "make double con" },
+		{ command: "cancel", description: "cancel make double con" },
+	], 
+	{ scope: { type: "default" } }
+);
+
+hwangBot.setMyCommands(
+	[
+		{ command: "status", description: "bot status" },
+		{ command: "test", description: "/test youtube_id" },
+		{ command: "msg", description: "/msg (?:\"string\")" },
+		{ command: "count", description: "/count (?:number)" },
+		{ command: "delay", description: "/delay (?:number)" },
+		{ command: "black", description: "/black (?:(add|del) number)" },
+		{ command: "sticker", description: "list sticker commands" },
+		{ command: "double", description: "make double con" },
+		{ command: "cancel", description: "cancel make double con" },
 	], 
 	{ scope: { type: "chat", chat_id: process.env.CHAT_ID_ADMIN} }
 );

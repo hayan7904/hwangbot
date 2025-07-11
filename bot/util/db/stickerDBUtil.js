@@ -21,6 +21,7 @@ const deleteQueueItem = (id) => deleteStickerByIdStmt.run([id]);
 const selectAllPackageStmt = db.prepare(`SELECT * FROM package LIMIT ? OFFSET ?`);
 const selectAllPackageCountStmt = db.prepare(`SELECT COUNT(*) AS total FROM package`);
 const selectPackageByConIdStmt = db.prepare(`SELECT * FROM package WHERE con_id=?`);
+const selectPackageByPackNameStmt = db.prepare(`SELECT * FROM package WHERE pack_name=?`);
 const insertPackageStmt = db.prepare(`INSERT INTO package (con_id, con_title, pack_name) VALUES (?, ?, ?)`);
 const deletePackageByConIdStmt = db.prepare(`DELETE FROM package WHERE con_id=?`)
 
@@ -29,8 +30,21 @@ const pageSize = parseInt(process.env.PACKAGE_PAGE_SIZE) || 10;
 const getPackage = (page = 1) => selectAllPackageStmt.all(pageSize, (page - 1) * pageSize);
 const getPackageCount = () => selectAllPackageCountStmt.get().total;
 const getPackageItemByConId = (cid) => selectPackageByConIdStmt.get([cid]);
+const getPackageItemByPackName = (pname) => selectPackageByPackNameStmt.get([pname]);
 const insertPackageItem = (args) => insertPackageStmt.run(args);
 const deletePackageItem = (cid) => deletePackageByConIdStmt.run([cid]);
+
+const insertDoubleStmt = db.prepare(`INSERT INTO double (unique_id_1, unique_id_2, con_title, pack_name, image, ext) VALUES (?, ?, ?, ?, ?, ?)`);
+const selectDoubleCountByUniqueIdStmt = db.prepare(`SELECT COUNT(*) AS total FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+const selectDoubleByUniqueIdStmt = db.prepare(`SELECT * FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+const deleteDoubleByUniqueIdStmt = db.prepare(`DELETE FROM double WHERE unique_id_1=:uniqueId OR unique_id_2=:uniqueId`);
+const deleteDoubleByPackNameStmt = db.prepare(`DELETE FROM double WHERE pack_name=?`)
+
+const insertDoubleItem = (args) => insertDoubleStmt.run(args);
+const getDoubleCount = (uid) => selectDoubleCountByUniqueIdStmt.get({ uniqueId: uid }).total;
+const getDoubleImageByUniqueId = (uid) => selectDoubleByUniqueIdStmt.get({ uniqueId: uid });
+const deleteDoubleItemByUniqueId = (uid) => deleteDoubleByUniqueIdStmt.run({ uniqueId: uid });
+const deleteDoubleItemByPackName = (pname) => deleteDoubleByPackNameStmt.run([pname]);
 
 process.on('SIGINT', () => db.close());
 process.on('exit', () => db.close());
@@ -43,9 +57,17 @@ module.exports = {
     insertQueueItem,
     deleteAllQueue,
     deleteQueueItem,
+
     getPackage,
     getPackageCount,
     getPackageItemByConId,
+    getPackageItemByPackName,
     insertPackageItem,
-    deletePackageItem
+    deletePackageItem,
+
+    insertDoubleItem,
+    getDoubleCount,
+    getDoubleImageByUniqueId,
+    deleteDoubleItemByUniqueId,
+    deleteDoubleItemByPackName,
 }

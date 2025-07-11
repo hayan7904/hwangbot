@@ -3,7 +3,7 @@ const hwangBot = require('@/init');
 const { commonCheck, blacklistCheck, adminChatCheck, adminUserCheck } = require('@util/commonHelper');
 const { jobsInfo, LINK_DCCON, LINK_STICKER, getLink, getConData } = require('@util/stickerHelper');
 const { getBlacklistFlag } = require('@util/db/commonDBUtil');
-const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem } = require('@util/db/stickerDBUtil');
+const { getPackage, getPackageCount, getPackageItemByConId, deletePackageItem, deleteDoubleItem } = require('@util/db/stickerDBUtil');
 const stickerQueue = require('@/job/queue');
 const logger = require('@logger/logger');
 
@@ -25,7 +25,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
     if (op === 'queue') {
         if (arg && arg == 'clear' && adminUserCheck(msg)) {
-            const total = await stickerQueue.getWaiting()?.length || 0;
+            const total = await stickerQueue.getWaiting().then(res => res.length) || 0;
             if (total > 0) await stickerQueue.drain();
 
             hwangBot.sendMessage(msg.chat.id, `<b>🗑 대기 중인 스티커 ${total}개를 삭제했습니다.</b>`, {parse_mode: "HTML"});
@@ -93,7 +93,7 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
 
         try {
             const queue = [ ...await stickerQueue.getActive(), ...await stickerQueue.getWaiting() ].filter((job) => job.data.conId == cid);
-            const dupCheck = getPackageItemByConId(cid) && [ ...queue ].length > 0;
+            const dupCheck = getPackageItemByConId(cid) || [ ...queue ].length > 0;
 
             if (dupCheck) {
                 hwangBot.sendMessage(msg.chat.id, '<b>❌ 이미 제작 중이거나 제작 완료된 스티커입니다.</b>', {parse_mode: "HTML"});
@@ -140,12 +140,14 @@ hwangBot.onText(/^\/sticker[\s]+(queue|list|make|delete)(?:[\s]+(clear|[0-9]+))?
         const res = deletePackageItem(cid);
 
         if (res?.changes > 0) {
+            deleteDoubleItemByPackName(item.pack_name);
+
             hwangBot.sendMessage(msg.chat.id,
                 `<b>📦 [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 완료</b>`,
                 {parse_mode: "HTML"}
             );
 
-            logger.info(`ADMIN | STICKER | Package Deleted -> [${cid}] ${item.con_title} | ${item.pack_name}`);
+            logger.info(`ADMIN | STICKER | [${cid} | ${item.con_title} | ${item.pack_name}] Package Deleted`);
         } else {
             hwangBot.sendMessage(msg.chat.id,
                 `<b>❌ [<a href='${getLink(LINK_DCCON, cid)}'>${cid}</a>] <code>${item.con_title}</code> 스티커팩 삭제 실패</b>`,
