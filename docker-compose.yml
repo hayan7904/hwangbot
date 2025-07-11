@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  hwangbot:
+    image: hwangbot-main
+    container_name: hwangbot_main
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./sticker.db:/app/sticker.db
+      - ./variable.db:/app/variable.db
+    env_file:
+      - .env.docker
+    depends_on:
+      - redis
+  
+  redis:
+    image: redis:latest
+    container_name: hwangbot_redis
+    ports:
+      - "4242:6379"

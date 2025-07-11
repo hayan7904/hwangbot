@@ -1,9 +1,9 @@
 require('dotenv').config();
-const { hwangBot } = require('@/init.js');
-const { callGptYoutube, callGptVision } = require('@util/gptUtil.js');
-const { getYoutubeId, getYoutubeData } = require('@util/youtubeUtil.js');
-const { getBlacklist } = require('@util/db/commonDBUtil.js');
-const { logger } = require('@logger/logger.js');
+const hwangBot = require('@/init');
+const { callGptYoutube, callGptVision } = require('@util/gptUtil');
+const { getYoutubeId, getYoutubeData } = require('@util/youtubeUtil');
+const { getBlacklist } = require('@util/db/commonDBUtil');
+const logger = require('@logger/logger');
 
 const sleep = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));

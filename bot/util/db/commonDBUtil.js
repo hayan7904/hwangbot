@@ -27,8 +27,8 @@ const setNoBirdDelay = (delay) => updateByKeyStmt.run([delay, keys.noBirdDly]);
 const insertBlacklist = (id) => insertStmt.run([keys.blacklist, id]);
 const deleteBlacklist = (id) => deleteByKeyAndValueStmt.run([keys.blacklist, id]);
 
-process.on('exit', () => db.close());
 process.on('SIGINT', () => db.close());
+process.on('exit', () => db.close());
 
 module.exports = {
     getNoBirdMessage,

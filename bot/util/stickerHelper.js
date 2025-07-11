@@ -10,7 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath.path);
 const sharp = require('sharp');
-const { logger } = require('@logger/logger.js');
+const logger = require('@logger/logger');
 
 const mainPageUrl = 'https://dccon.dcinside.com/';
 const pkgDetailApiEndPoint = 'https://dccon.dcinside.com/index/package_detail';
@@ -21,40 +21,38 @@ const convertPath = `${appRoot}/download/convert`;
 const MAX_SIZE_STATIC = 512 * 1024 // 512kb
 const MAX_SIZE_VIDEO = 256 * 1024 // 256kb
 
-const workInfo = {
-    item: [],
-    state: '',
-    curr: 0,
-    max: 0,
-    start(item) {
-        this.item.push(item);
-        this.state = '🌐 데이터 가져오는 중';
-        this.curr = 0;
-        this.max = item.con_length;
-    },
-    complete(state) {
-        this.item.shift();
-        this.state = '';
-        this.curr = 0;
-        this.max = 0;
-    },
-    isWorking() {
-        return this.item.length > 0;
-    },
-    setState(state) {
-        this.state = state;
-        this.curr = 0;
-    },
-    progress() {
-        this.curr++;
-    },
-    getProgress() {
-        return {
-            item: this.item[0],
-            state: this.state,
-            curr: this.curr,
-            max: this.max
+const jobsInfo = {
+    jobs: new Map(),
+    start(id, data) {
+        if (this.jobs.has(id)) throw new Error('Job already exist');
+
+        const job = {
+            data,
+            state: '🌐 데이터 가져오는 중',
+            curr: 0,
+            max: 0,
         };
+        this.jobs.set(id, job);
+    },
+    complete(id) {
+        if (!this.jobs.delete(id)) throw new Error('Job does not exist');
+    },
+    isWorking(id) {
+        return this.jobs.has(id);
+    },
+    setState(id, state, conLength = 0) {
+        const job = this.jobs.get(id);
+        job.state = state;
+        job.curr = 0;
+        if (conLength) job.max = conLength;
+    },
+    progress(id) {
+        const job = this.jobs.get(id);
+        job.curr++;
+        return job.curr;
+    },
+    getProgress(id) {
+        return this.jobs.get(id);
     }
 }
 
@@ -100,13 +98,14 @@ const getConData = async (cid) => {
     };
 }
 
-const downloadCon = async (conData) => {
+const downloadCon = async (conData, jid) => {
     const downloadResult = [];
 
     if (fs.existsSync(downloadPath)) fs.rmSync(downloadPath, { recursive: true, force: true });
 
     fs.mkdirSync(convertPath, { recursive: true });
 
+    const half = Math.floor(conData.imagePath.length / 2);
     for (const img of conData.imagePath) {
         const reqHeaders = { 'Referer': mainPageUrl };
         const res = await axios.get(
@@ -130,7 +129,11 @@ const downloadCon = async (conData) => {
             filename,
             ext
         });
-        workInfo.progress();
+
+        jobsInfo.progress(jid);
+        // if (jobsInfo.progress(jid) == half) {
+
+        // }
     }
 
     return downloadResult;
@@ -146,13 +149,13 @@ const getWebmDuration = (input) => {
     });
 }
 
-const convertGifToWebm = (input, output, bitrate, filters) => {
+const convertImageToWebm = (input, output, bitrate, filters, setpts = '') => {
     return new Promise((resolve, reject) => {
         ffmpeg(input)
             .outputOptions([
                 '-c:v libvpx-vp9',
                 `-b:v ${bitrate}`,
-                `-vf ${filters}`,
+                `-vf ${filters}${setpts}`,
                 '-an',
                 '-pix_fmt yuva420p',
                 '-auto-alt-ref 0',
@@ -173,32 +176,53 @@ const convertImageToWebp = (input, output, quality = null) => {
             .toFile(output);
 }
 
-const convertCon = async (downloadResult) => {
+const getNewExt = (input, ext) => {
+    if (ext == 'gif') return 'webm';
+
+    if (ext == 'png') {
+        const fd = fs.openSync(input, 'r');
+        const buffer = Buffer.alloc(1024);
+        fs.readSync(fd, buffer, 0, buffer.length, 0);
+        fs.closeSync(fd);
+
+        if (buffer.includes('acTL') || buffer.includes('GIF')) return 'webm';
+    }
+
+    return 'webp';
+}
+
+const convertCon = async (downloadResult, jid) => {
     const convertResult = [];
 
     for (const { filepath, filename, ext } of downloadResult) {
-        const newExt = ext == 'gif' ? 'webm' : 'webp';
+        const newExt = getNewExt(filepath, ext);
         const output = path.join(convertPath, filename + '.' + newExt);
 
         if (newExt == 'webm') {
             let filters = `scale=512:512:force_original_aspect_ratio=decrease,fps=30`;
-            await convertGifToWebm(filepath, output, '1M', filters);
+            let setpts = '';
+            await convertImageToWebm(filepath, output, '1M', filters);
 
-            let duration = await getWebmDuration(output);
             const maxDuration = 3.0;
+            let duration = await getWebmDuration(output);
+            let speedFactor = Math.floor((maxDuration / duration) * 100) * 0.01;
 
             while (duration > maxDuration) {
-                const speedFactor = Math.floor((maxDuration / duration) * 10) / 10;
-                filters += `,setpts=${speedFactor}*PTS`
+                setpts = `,setpts=${speedFactor}*PTS`
+                logger.info(`${filename}.${newExt} - duration: ${duration} | speedFactor: ${speedFactor}`);
 
-                await convertGifToWebm(filepath, output, '1M', filters);
+                await convertImageToWebm(filepath, output, '1M', filters, setpts);
                 duration = await getWebmDuration(output);
+                speedFactor *= Math.floor((maxDuration / duration) * 100) * 0.01;
             }
+            logger.info(`${filename}.${newExt} - result duration: ${duration}`);
 
-            let bitrate = 950;
+            let bitrate = Math.floor(((255 * 1024) / fs.statSync(output).size) * 1000);
+            logger.info(`${filename}.${newExt} - size: ${fs.statSync(output).size / 1024}KB`);
             while (fs.statSync(output).size > MAX_SIZE_VIDEO) {
-                await convertGifToWebm(filepath, output, `${bitrate}K`, filters);
-                bitrate -= 50;
+                await convertImageToWebm(filepath, output, `${bitrate}K`, filters, setpts);
+                logger.info(`${filename}.${newExt} - size: ${fs.statSync(output).size / 1024}KB | bitrate: ${bitrate}K`);
+                bitrate -= 25;
             }
         } else {
             await convertImageToWebp(filepath, output);
@@ -211,12 +235,12 @@ const convertCon = async (downloadResult) => {
         }
 
         convertResult.push({ filepath: output, ext: newExt });
-        workInfo.progress();
+        jobsInfo.progress(jid);
 
         const outputSize = Math.floor(fs.statSync(output).size / 1024);
         const outputDuration = newExt == 'webm' ? await getWebmDuration(output) : '-';
 
-        logger.info(`ADMIN | STICKER | ${filename}.${newExt} Converted -> Size: ${outputSize}KB | Duration: ${outputDuration}`);
+        logger.info(`ADMIN | STICKER | ${filename}.${newExt} | Converted -> Size: ${outputSize}KB | Duration: ${outputDuration}`);
     }
 
     return convertResult;
@@ -225,7 +249,7 @@ const convertCon = async (downloadResult) => {
 module.exports = {
     LINK_DCCON,
     LINK_STICKER,
-    workInfo,
+    jobsInfo,
     getLink,
     getConData,
     downloadCon,
