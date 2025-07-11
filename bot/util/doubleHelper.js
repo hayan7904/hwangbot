@@ -35,7 +35,10 @@ const doubleInfo = {
         return this.get(id)?.type == type;
     },
     continue(id) {
-        if (this.isWorking(id)) this.get(id).uniqueId = [];
+        if (this.isWorking(id)) {
+            this.get(id).uniqueId = [];
+            this.get(id).filePath = [];
+        }
     },
     complete(id) {
         this.jobs.delete(id);
