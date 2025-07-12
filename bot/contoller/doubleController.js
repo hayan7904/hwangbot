@@ -96,12 +96,12 @@ hwangBot.on('message', async (msg) => {
 
         if (ext == 'webp') {
             hwangBot.sendPhoto(msg.chat.id, image, {
-                caption: `<b>${msg.from.last_name ? msg.from.last_name.concat(' ') : null}${msg.from.first_name}</b>`,
+                caption: `<b>${msg.from.last_name ? msg.from.last_name.concat(' ') : ''}${msg.from.first_name}</b>`,
                 parse_mode: 'HTML'
             });
         } else {
             hwangBot.sendAnimation(msg.chat.id, image, {
-                caption: `<b>${msg.from.last_name ? msg.from.last_name.concat(' ') : null}${msg.from.first_name}</b>`,
+                caption: `<b>${msg.from.last_name ? msg.from.last_name.concat(' ') : ''}${msg.from.first_name}</b>`,
                 parse_mode: 'HTML'
             });
         }
